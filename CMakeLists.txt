@@ -6,7 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CONTAINER_HDR DataContainer.h BinFile.h BinContainer.h)
 set(CONTAINER_SRC DataContainer.cpp BinFile.cpp BinContainer.cpp)
 
-add_library(Container Property ${CONTAINER_HDR} ${CONTAINER_SRC})
+if(NOT TARGET Container)
+    add_library(Container Property ${CONTAINER_HDR} ${CONTAINER_SRC})
+endif()
 
 if( NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Property)
     exec_program("git" "" ARGS "clone https://github.com/nilrum/Property ${CMAKE_CURRENT_SOURCE_DIR}/Property")
