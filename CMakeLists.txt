@@ -8,6 +8,7 @@ set(CONTAINER_SRC DataContainer.cpp BinFile.cpp BinContainer.cpp)
 
 if(NOT TARGET Container)
     add_library(Container Property ${CONTAINER_HDR} ${CONTAINER_SRC})
+    target_include_directories(Container PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PUBLIC Property)
 endif()
 
 if( NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Property)
@@ -15,5 +16,4 @@ if( NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Property)
     message("Property cloned")
 endif()
 
-target_include_directories(Container PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PUBLIC Property)
 add_subdirectory(Property)
