@@ -9,14 +9,12 @@ foreach(F ${CONTAINER_FILES})
     set(INCL_CONTAINER ${INCL_CONTAINER} ../${F})
 endforeach()
 
-#Add include dirs
-include_directories(.. GTEST_DIR GTEST_DIR/include)
-
 #Add test files
 set(CONTAINER_TESTS DataContainerTest.cpp)
 
 #Target
 if(NOT TARGET ContainerTest)
     add_executable(ContainerTest ${CONTAINER_TESTS} ${INCL_CONTAINER})
-    target_link_libraries(ContainerTest PUBLIC Container gtest gtest_main gmock)
+    target_include_directories(ContainerTest PUBLIC .. GOOGLETEST_DIR GOOGLETEST_DIR/include)
+    target_link_libraries(ContainerTest Container gtest gtest_main gmock)
 endif()

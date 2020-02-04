@@ -6,7 +6,6 @@
 #include "gmock/gmock.h"
 using namespace testing;
 #include "DataContainer.h"
-#include "FileSystem.h"
 
 enum class TTypeErrors{Ok, Err1, Err2};
 REGISTER_CODES(TTypeErrors, Ok, "No errors")
@@ -61,6 +60,5 @@ TEST(DataContainer, RegisterHeader)
 
     TContainer cont(TContainer::RegHeader(0)->Clone());
     EXPECT_TRUE(cont.IsValid());
-
 }
 
