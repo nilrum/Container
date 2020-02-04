@@ -18,3 +18,5 @@ if(NOT TARGET Container)
     target_include_directories(Container PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PUBLIC Property)
     target_link_libraries(Container Property)
 endif()
+
+add_subdirectory(tests)
