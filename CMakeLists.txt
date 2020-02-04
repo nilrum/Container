@@ -14,5 +14,6 @@ if( NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Property)
     exec_program("git" "" ARGS "clone https://github.com/nilrum/Property ${CMAKE_CURRENT_SOURCE_DIR}/Property")
     message("Property cloned")
 endif()
-include_directories(Property)
+
+target_include_directories(Container PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PUBLIC Property)
 add_subdirectory(Property)
