@@ -15,6 +15,6 @@ set(CONTAINER_TESTS DataContainerTest.cpp)
 #Target
 if(NOT TARGET ContainerTest)
     add_executable(ContainerTest ${CONTAINER_TESTS} ${INCL_CONTAINER})
-    target_include_directories(ContainerTest PUBLIC .. GOOGLETEST_DIR GOOGLETEST_DIR/include)
+    target_include_directories(ContainerTest PUBLIC .. ${GOOGLETEST_DIR}/include)
     target_link_libraries(ContainerTest Container gtest gtest_main gmock)
 endif()
