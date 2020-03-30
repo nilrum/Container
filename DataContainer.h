@@ -6,26 +6,59 @@
 #define TESTAPP_DATACONTAINER_H
 
 #include "PropertyClass.h"
+class TDataBase;
+using TPtrData = std::shared_ptr<TDataBase>;
+using TVecData = std::vector<TPtrData>;
 
 class TDataBase: public TPropertyClass{
 public:
     virtual ~TDataBase() = default;
 
-    virtual TString Unit() const = 0;
+    virtual TString Unit() const{ return TString(); };
     virtual void SetUnit(const TString& value){};
 
-    virtual double Value(int index) const = 0;
-    virtual void SetValue(int index, double value){};
-    virtual size_t CountValue() const = 0;
+    virtual double Key(int index) const{ return 0; };
+    virtual void SetKey(int index, double value){};
+    virtual double Value(int index, int array = 0) const { return 0; };
+    virtual void SetValue(int index, double value, int array = 0){};
+    virtual size_t CountValue() const { return 0; };
+    virtual size_t CountArray() const { return 1; };
 
     TString Title() const { return Name() + (Unit().size() ? ("," + Unit()) : TString()); }
 
+    inline double FirstKey() const { return Key(0); }
+    inline double LastKey() const { return Key(CountValue() - 1); }
+
+    //TODO удалить методы
+    virtual void NormValue( size_t index, double depth, size_t ib, size_t ie, double scale, const TDataBase* data){};
+    virtual void ShrinkCount(int value){};
+
+    virtual void Insert(size_t index, const TVecDouble& keyValues = TVecDouble()){};
+    virtual void Delete(size_t index, size_t count = 1){};
+
+    virtual void Load(FILE* file) {};
+    virtual void Save(FILE* file) {};
+
+    virtual size_t CountOther() const { return 0; };
+    virtual const TPtrData& Other(int index) const;
+    virtual const TPtrData& AddOther(const TPtrData& value){ return value; };
+    virtual void DelOther(const TPtrData& value){};
+    virtual const TPtrData& AddDefOther(){ return AddOther(std::make_shared<TDataBase>()); };
+
+    virtual TVecString DefaultTitles() const{ return TVecString(); }
+
     PROPERTIES_CREATE(TDataBase, TPropertyClass, NO_CREATE(),
         PROPERTY(TString, unit, Unit, SetUnit);
+        PROPERTY_READ(size_t, countArray, CountArray);
+        PROPERTY(int, tag, Tag, SetTag);
+        PROPERTY(bool, isUsed, IsUsed, SetIsUsed);
     )
+    PROPERTY_FUN(int, tag, Tag, SetTag);
+    PROPERTY_FUN(bool, isUsed, IsUsed, SetIsUsed);
+protected:
+    int isUsed = false;
+    int tag = 0;
 };
-using TPtrData = std::shared_ptr<TDataBase>;
-using TVecData = std::vector<TPtrData>;
 
 enum TIdInfo{iiArea = 0, iiWell, iiDate, iiTime, iiBegin, iiEnd, iiStep, iiCompany, iiServComp, iiCountInfo};
 
@@ -43,6 +76,7 @@ public:
     virtual TVariable Info(int index) const = 0;
     virtual void SetInfo(int index, const TVariable& value){};
     virtual size_t CountInfo() const;
+    virtual void CopyInfo(const TPtrHeader& src){};
 
     virtual TRezult CheckFile(const TString& path) = 0;        //проверка файла на соответствие формату
     virtual TVecData LoadableData(const TString& path) = 0; //получаем список кривых которые доступны для загрузки из файла
@@ -55,6 +89,7 @@ public:
 using TPtrRegHeader = std::unique_ptr<THeaderBase>;
 using TVecHeader = std::vector<TPtrRegHeader>;
 
+enum class TContainerRezult{ Ok, InvHeader};
 
 class TContainer{
 public:
@@ -63,10 +98,13 @@ public:
 
     bool IsValid() const;
 
-    TPtrHeader Header() const;
-    TPtrData Data(int index);
+    const TPtrHeader& Header() const;
+    void SetHeader(const TPtrHeader& value);
+    const TPtrData& Data(int index);
     const TPtrData& Data(int index) const;
     size_t CountData() const;
+
+    bool IsUp() const;
 
     TRezult LoadFile(const TString& path, bool isCheck);
     TRezult LoadData(const TVecData& value);
@@ -93,6 +131,8 @@ protected:
     static TVecHeader& Headers(){ static TVecHeader headers; return headers; }
 };
 
+using TPtrContainer = std::shared_ptr<TContainer>;
+
 class TSelectLoader{
 public:
     virtual void SetContainer(TContainer* value, const TString& path)
@@ -110,10 +150,11 @@ public:
     }
     std::vector<bool>& Selected() { return selected; }
 protected:
-    TContainer* cont = nullptr;
+    TContainer* cont = nullptr;//TODO подумать над этим
     TVecData loadable;
     std::vector<bool> selected;
 };
 
 using TPtrLoader = std::shared_ptr<TSelectLoader>;
+
 #endif //TESTAPP_DATACONTAINER_H

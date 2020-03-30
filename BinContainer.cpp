@@ -4,6 +4,7 @@
 
 #include "BinContainer.h"
 
+
 TString THeaderBin::Version() const
 {
     return createFile()->Version();

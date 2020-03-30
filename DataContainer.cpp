@@ -3,6 +3,7 @@
 //
 
 #include "DataContainer.h"
+INIT_PROPERTYS(TDataBase)
 
 TContainer::TContainer(const TPtrHeader &value):header(value)
 {
@@ -14,12 +15,17 @@ bool TContainer::IsValid() const
     return static_cast<bool>(header);
 }
 
-TPtrHeader TContainer::Header() const
+const TPtrHeader& TContainer::Header() const
 {
     return header;
 }
 
-TPtrData TContainer::Data(int index)
+void TContainer::SetHeader(const TPtrHeader &value)
+{
+    header = value;
+}
+
+const TPtrData& TContainer::Data(int index)
 {
     return data[index];
 }
@@ -36,7 +42,7 @@ size_t TContainer::CountData() const
 
 TRezult TContainer::LoadFile(const TString &path, bool isCheck)
 {
-    if(IsValid() == false) return false;
+    if(IsValid() == false) return TContainerRezult::InvHeader;
     if(isCheck)
     {
         TRezult r = header->CheckFile(path);
@@ -69,8 +75,8 @@ TContainer TContainer::LoadFromFile(const TString &path)
     if(h)
     {
         TContainer c(h);
-        c.LoadFile(path, false);
-        return c;
+        if(c.LoadFile(path, false).IsNoError())
+            return c;
     }
 
     return TContainer();
@@ -126,6 +132,13 @@ void TContainer::SetInfoDouble(int index, double value)
     header->SetInfo(index, value);
 }
 
+bool TContainer::IsUp() const
+{
+    if(data.size() && data[0]->CountValue())
+        return data[0]->Key(0) > data[0]->Key(data[0]->CountValue() - 1);
+    return false;
+}
+
 TVecString THeaderBase::InitDefTitle()
 {
     return {"Area", "Well", "Date", "Time", "Begin depth", "End depth", "Step depth", "Company", "Service company"};
@@ -142,4 +155,9 @@ TString THeaderBase::TitleInfo(int index) const
 size_t THeaderBase::CountInfo() const
 {
     return iiCountInfo;
+}
+
+const TPtrData &TDataBase::Other(int index) const
+{
+    return Single<TPtrData>();
 }
