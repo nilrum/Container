@@ -10,7 +10,20 @@ class TDataBase;
 using TPtrData = std::shared_ptr<TDataBase>;
 using TVecData = std::vector<TPtrData>;
 
-class TDataBase: public TPropertyClass{
+class TUsedClass;
+using TPtrUsedClass = std::shared_ptr<TUsedClass>;
+using TWPtrUsedClass = std::weak_ptr<TUsedClass>;
+
+class TUsedClass : public TPropertyClass{
+public:
+    virtual TString FullName() const;
+    virtual void CallUsed(const TPtrData& value);
+    void SetParent(const TPtrUsedClass& value);
+protected:
+    TWPtrUsedClass parent;
+};
+
+class TDataBase: public TUsedClass{
 public:
     virtual ~TDataBase() = default;
 
@@ -51,10 +64,12 @@ public:
         PROPERTY(TString, unit, Unit, SetUnit);
         PROPERTY_READ(size_t, countArray, CountArray);
         PROPERTY(int, tag, Tag, SetTag);
-        PROPERTY(bool, isUsed, IsUsed, SetIsUsed);
+        PROPERTY(bool, isUsed, IsUsed, SetIsUsed).NoSerialization();
     )
     PROPERTY_FUN(int, tag, Tag, SetTag);
-    PROPERTY_FUN(bool, isUsed, IsUsed, SetIsUsed);
+    bool IsUsed() const;
+    virtual void SetIsUsed(bool value);
+    void SetIsUsedNoCall(bool value);
 protected:
     int isUsed = false;
     int tag = 0;
@@ -107,7 +122,7 @@ public:
     bool IsUp() const;
 
     TRezult LoadFile(const TString& path, bool isCheck);
-    TRezult LoadData(const TVecData& value);
+    virtual TRezult LoadData(const TVecData& value);
 
     TString Info(int index) const;
     void SetInfo(int index, const TString& value);

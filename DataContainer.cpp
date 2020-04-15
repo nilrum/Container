@@ -161,3 +161,38 @@ const TPtrData &TDataBase::Other(int index) const
 {
     return Single<TPtrData>();
 }
+
+bool TDataBase::IsUsed() const
+{
+    return isUsed;
+}
+
+void TDataBase::SetIsUsed(bool value)
+{
+    CallUsed(std::dynamic_pointer_cast<TDataBase>(shared_from_this()));
+}
+
+void TDataBase::SetIsUsedNoCall(bool value)
+{
+    isUsed = value;
+    Change();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void TUsedClass::SetParent(const TPtrUsedClass &value)
+{
+    parent = value;
+}
+
+TString TUsedClass::FullName() const
+{
+    TPtrUsedClass p = parent.lock();
+    if(p != nullptr) return p->FullName() + "/" + Name();
+    else return Name();
+}
+
+void TUsedClass::CallUsed(const TPtrData &value)
+{
+    TPtrUsedClass p = parent.lock();
+    if(p) p->CallUsed(value);
+}
