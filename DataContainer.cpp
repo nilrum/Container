@@ -40,18 +40,18 @@ size_t TContainer::CountData() const
     return data.size();
 }
 
-TRezult TContainer::LoadFile(const TString &path, bool isCheck)
+TResult TContainer::LoadFile(const TString &path, bool isCheck)
 {
     if(IsValid() == false) return TContainerRezult::InvHeader;
     if(isCheck)
     {
-        TRezult r = header->CheckFile(path);
+        TResult r = header->CheckFile(path);
         if(r.IsError()) return r;
     }
     return LoadData(header->LoadableData(path));//по умолчанию загружаем все кривые
 }
 
-TRezult TContainer::LoadData(const TVecData &value)
+TResult TContainer::LoadData(const TVecData &value)
 {
     data = value;
     return header->LoadData(data);
@@ -176,6 +176,16 @@ void TDataBase::SetIsUsedNoCall(bool value)
 {
     isUsed = value;
     Change();
+}
+
+void TDataBase::Assign(const TPtrData &value)
+{
+    SetName(value->Name());
+    SetUnit(value->Unit());
+    SetCategory(value->Category());
+    SetIndUnit(value->IndUnit());
+    SetCoefs(value->Coefs());
+    SetKeyDelta(value->KeyDelta());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -3,8 +3,8 @@ project(Container)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CONTAINER_HDR DataContainer.h BinFile.h BinContainer.h)
-set(CONTAINER_SRC DataContainer.cpp BinFile.cpp BinContainer.cpp)
+set(CONTAINER_HDR DataContainer.h BinFile.h BinContainer.h Units.h)
+set(CONTAINER_SRC DataContainer.cpp BinFile.cpp BinContainer.cpp Units.cpp)
 
 if(NOT TARGET Property)
     if(NOT EXISTS ${PROPERTY_DIR})

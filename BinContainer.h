@@ -14,21 +14,27 @@ public:
     THeaderBin(std::function<TPtrBinFile()> fun):createFile(fun){}
     virtual TString Version() const override;
 
-    virtual TRezult CheckFile(const TString& path) override;
+    virtual TResult CheckFile(const TString& path) override;
     virtual TVecData LoadableData(const TString& path) override; //получаем список кривых которые доступны для загрузки из файла
-    virtual TRezult LoadData(const TVecData& datas) override;       //загружаем список кривых
+    virtual TResult LoadData(const TVecData& datas) override;       //загружаем список кривых
 
 protected:
     std::function<TPtrBinFile()> createFile;
     void Copy(char* ptr, const TVariable& value);
     void Copy(float& ptr, const TVariable& value);
+    template<typename TCont, typename T>
+    const T& Add(TCont& rez, const T& value)
+    {
+        rez.emplace_back(value);
+        return value;
+    }
 };
 
 template <typename TValue, typename TKey>
 class TDataBin : public TDataBase{
 public:
-    TDataBin(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, double coef = 1):
-        unit(u), offset(ov), offsetKey(ok), file(f), coefKey(coef){ name = n; }
+    TDataBin(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f):
+        unit(u), offset(ov), offsetKey(ok), file(f){ name = n; }
 
     virtual TString Unit() const override
     {
@@ -47,12 +53,13 @@ public:
 
     virtual double Value(int index, int array = 0) const override
     {
-        return  *(reinterpret_cast<TValue*>(file->PtrData(index) + offset));
+        TValue v = *(reinterpret_cast<TValue*>(file->PtrData(index) + offset));
+        return  v * coefA + coefB;
     }
 
     virtual void SetValue(int index, double value, int array = 0) override
     {
-        *(reinterpret_cast<TValue*>(file->PtrData(index) + offset)) = value;
+        *(reinterpret_cast<TValue*>(file->PtrData(index) + offset)) = (value - coefB) / coefA;
     }
 
     virtual size_t CountValue() const override
@@ -60,13 +67,35 @@ public:
         return file->CountData();
     }
 
-protected:
-    TString title;      //название кривой
-    TString unit;       //ед. измерения кривой
-    size_t offset = 0;      //смещение относительно начало структуры
-    size_t offsetKey = 0; //смещение для глубины
-    double coefKey = 1.;    //коэффициент для глубины до целых единиц(м. фт.)
+    TDataBin<TValue, TKey>* SetClb(double a, double b, TUnitCategory cat)
+    {
+        if(a != 0.)
+        {
+            coefA = a;
+            coefB = b;
+        }
+        category = cat;
+        return this;
+    }
 
+    virtual double KeyDelta() const { return keyDelta; }
+    virtual void SetKeyDelta(double value) { keyDelta = value; }
+
+    virtual TVecDouble Coefs() const override { return {coefB, coefA}; }
+    void SetCatAndInd(int cat, int ind)
+    {
+        category = cat;
+        indUnit = ind;
+    }
+protected:
+    TString title;          //название кривой
+    TString unit;           //ед. измерения кривой
+    size_t offset = 0;      //смещение относительно начало структуры
+    size_t offsetKey = 0;   //смещение для глубины
+    double coefKey = 1.;    //коэффициент для глубины до целых единиц(м. фт.)
+    double coefA = 1.;      //калибровачные коэффициенты А и
+    double coefB = 0.;     //В
+    double keyDelta = 0.;   //точка записи для данных
     TPtrBinFile file;   //данные файла
 };
 
@@ -74,8 +103,8 @@ using TCountCoef = std::vector<std::tuple<size_t, double>>;
 template <typename TValue, typename TKey, int size>
 struct TDataBinOver : public TDataBin<TValue, TKey>{
 public:
-    TDataBinOver(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TCountCoef& arrayCoef, double c = 1):
-            TDataBin<TValue, TKey>(n, u, ov, ok, f, c)
+    TDataBinOver(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TCountCoef& arrayCoef):
+            TDataBin<TValue, TKey>(n, u, ov, ok, f)
     {
         coef = TCountCoef(arrayCoef.size());
         for(size_t i = 0; i < coef.size(); i++)
@@ -136,16 +165,19 @@ TString Cp1251ToUt8(const TString& val);
     using TKey = TYPE; \
     using TStruct = STRUCT;\
     size_t ok = offsetof(TStruct::TDataType, NAME);\
-    double coefKey = 1.;
+    double coefKey = 1.;//TODO как лучше сделать
 
 #define DOUBLE_LINE(NAME, UNIT, TYPE)\
-    std::make_shared<TDataBin<TYPE, TKey>>(#NAME, #UNIT, offsetof(TStruct::TDataType, NAME), ok, file, coefKey)
+    std::make_shared<TDataBin<TYPE, TKey>>(#NAME, #UNIT, offsetof(TStruct::TDataType, NAME), ok, file)
 
 #define DOUBLE_LINE_ARRAY(NAME, OFF_NAME, UNIT, TYPE, ALG, COUNT, COEF)\
-    std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, offsetof(TStruct::TDataType, OFF_NAME), ok, file, COEF, coefKey)
-
-#define DOUBLE_LINE_COEF(NAME, UNIT, TYPE, KA, KB, TYPECOEF)
+    std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, offsetof(TStruct::TDataType, OFF_NAME), ok, file, COEF)
 
 #define COUNTCOEF(...) TCountCoef{  __VA_ARGS__ }
+
+#define HEADER_CLB(TYPE, NAME)\
+    (*reinterpret_cast<TYPE*>(file->PtrHeader() + offsetof(TStruct::THeaderType, NAME)))
+
+#define CLB(TYPE, KA, KB, ENUM) SetClb(HEADER_CLB(TYPE, KA), HEADER_CLB(TYPE, KB), TUnitCategory::ENUM)
 
 #endif //TESTAPP_BINCONTAINER_H

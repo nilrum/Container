@@ -10,7 +10,7 @@ TString THeaderBin::Version() const
     return createFile()->Version();
 }
 
-TRezult THeaderBin::CheckFile(const TString &path)
+TResult THeaderBin::CheckFile(const TString &path)
 {
     return createFile()->CheckVersion(path);
 }
@@ -30,9 +30,9 @@ TVecData THeaderBin::LoadableData(const TString &path)
     return TVecData();
 }
 
-TRezult THeaderBin::LoadData(const TVecData &datas)
+TResult THeaderBin::LoadData(const TVecData &datas)
 {
-    return TRezult();
+    return TResult();
 }
 
 TString DosToUtf8(const TString& dos)

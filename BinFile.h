@@ -14,8 +14,8 @@ enum class TBinFileRezult{ Ok, ErrOpen, ErrVersion };
 class TBinFile{
 public:
     virtual TString Version() const = 0;
-    virtual TRezult CheckVersion(const TString& path) = 0;
-    virtual TRezult LoadFile(const TString& path, bool isCheck = true) = 0;
+    virtual TResult CheckVersion(const TString& path) = 0;
+    virtual TResult LoadFile(const TString& path, bool isCheck = true) = 0;
 
     virtual unsigned char* PtrHeader() = 0;
     virtual unsigned char* PtrData(int index) = 0;
@@ -44,7 +44,7 @@ public:
     {
         return version;
     }
-    TRezult CheckVersion(const TString& path) override
+    TResult CheckVersion(const TString& path) override
     {
         auto file = OpenFile(path);
         if(file.get() == nullptr) return TBinFileRezult::ErrOpen;
@@ -52,7 +52,7 @@ public:
         std::fread(&h, sizeof(THeader), 1, file.get());
         return CheckHeader(h)? TBinFileRezult::Ok : TBinFileRezult::ErrVersion;
     }
-    virtual TRezult LoadFile(const TString& path, bool isCheck = true) override
+    virtual TResult LoadFile(const TString& path, bool isCheck = true) override
     {
         auto file = OpenFile(path);
         if(file.get() == nullptr) return TBinFileRezult::ErrOpen;
