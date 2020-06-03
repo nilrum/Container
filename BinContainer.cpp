@@ -22,7 +22,7 @@ void THeaderBin::Copy(char* ptr, const TVariable& value)
 
 void THeaderBin::Copy(float& ptr, const TVariable& value)
 {
-    ptr = value.ToDouble();
+    ptr = float(value.ToDouble());
 }
 
 TVecData THeaderBin::LoadableData(const TString &path)
@@ -43,7 +43,7 @@ TString DosToUtf8(const TString& dos)
 TString Cp866ToCp1251(const TString& dos)
 {//производит перевод строки из DOS кодировки в ANSI
     TString rez(dos.length(), ' ');
-    for(int i = 0; i < dos.size(); i++)//пройдемся по всем символам в строке
+    for(size_t i = 0; i < dos.size(); i++)//пройдемся по всем символам в строке
     {
         unsigned char curChar = dos[i];//получаем очередной символ
         if ((curChar >= 0x80) && (curChar < 0xB0))
@@ -58,7 +58,7 @@ TString Cp866ToCp1251(const TString& dos)
 TString Cp1251ToUt8(const TString& val)
 {
     TString rez;
-    for(int i = 0; i < val.length(); i++)
+    for(size_t i = 0; i < val.length(); i++)
     {
         const unsigned char& v = val[i];
         if (v < 0xC0) {

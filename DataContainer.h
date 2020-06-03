@@ -46,10 +46,6 @@ public:
     inline double FirstKey() const { return Key(0); }
     inline double LastKey() const { return Key(CountValue() - 1); }
 
-    //TODO удалить методы
-    virtual void NormValue( size_t index, double depth, size_t ib, size_t ie, double scale, const TDataBase* data){};
-    virtual void ShrinkCount(int value){};
-
     virtual void Insert(size_t index, const TVecDouble& keyValues = TVecDouble()){};
     virtual void Delete(size_t index, size_t count = 1){};
 
@@ -60,7 +56,7 @@ public:
     virtual const TPtrData& Other(int index) const;
     virtual const TPtrData& AddOther(const TPtrData& value){ return value; };
     virtual void DelOther(const TPtrData& value){};
-    virtual const TPtrData& AddDefOther(){ return AddOther(std::make_shared<TDataBase>()); };
+    virtual TPtrData AddDefOther(){ return AddOther(std::make_shared<TDataBase>()); };
 
     virtual TVecString DefaultTitles() const{ return TVecString(); }
     virtual TVecString DefaultEnumTypes() const{ return TVecString(); }
@@ -189,7 +185,7 @@ public:
     virtual TResult Select()
     {//возвращаем список выбраных кривых
         TVecData rez;
-        for(int i = 0; i < selected.size(); i++)
+        for(size_t i = 0; i < selected.size(); i++)
             if(selected[i]) rez.push_back(loadable[i]);
         return cont->LoadData(rez);
     }
@@ -198,11 +194,12 @@ public:
 
     TDepthUnit FromConvert() const { return fromConvert; }
 
-    TVecBool IsEditable()
+    TVecBool EditableVector()
     {
         TVecBool rez(selected.size());
         for(size_t i = 0; i < rez.size(); i++)
             rez[i] = loadable[i]->Category() != ucNone && loadable[i]->IndUnit() == 0;
+        return rez;
     }
 
     bool IsSelected() const

@@ -64,7 +64,7 @@ public:
         data.resize((count - sizeof(THeader))/ sizeof(TData));
 
         std::fseek(file.get(), sizeof(THeader), SEEK_SET);
-        for(int i = 0; i < data.size(); ++i)
+        for(size_t i = 0; i < data.size(); ++i)
             std::fread(&data[i], sizeof(TData), 1, file.get());
         return TBinFileRezult::Ok;
     }

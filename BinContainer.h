@@ -59,7 +59,7 @@ public:
 
     virtual void SetValue(int index, double value, int array = 0) override
     {
-        *(reinterpret_cast<TValue*>(file->PtrData(index) + offset)) = (value - coefB) / coefA;
+        *(reinterpret_cast<TValue*>(file->PtrData(index) + offset)) = TValue((value - coefB) / coefA);
     }
 
     virtual size_t CountValue() const override
@@ -100,7 +100,8 @@ protected:
 };
 
 using TCountCoef = std::vector<std::tuple<size_t, double>>;
-template <typename TValue, typename TKey, int size>
+
+template <typename TValue, typename TKey, size_t N>
 struct TDataBinOver : public TDataBin<TValue, TKey>{
 public:
     TDataBinOver(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TCountCoef& arrayCoef):
@@ -126,11 +127,11 @@ public:
 
     }
 
-    virtual size_t CountArray() const override { return size; }
+    virtual size_t CountArray() const override { return N; }
 
 protected:
     mutable int cashIndex = -1;
-    mutable double cashValue[size];
+    mutable double cashValue[N];
     TCountCoef coef;//количество данных для коэффициента и сам коэффициент
     void CalcCash(int index) const
     {
@@ -142,7 +143,7 @@ protected:
         size_t offsetSpad = std::get<0>(coef[indSpad]);
         double kus = std::get<1>(coef[indSpad]);
 
-        for(int i = size - 1; i >= 0; i--)
+        for(int i = N - 1; i >= 0; i--)
         {
             TValue v = ptrSpad[offsetSpad + i];
             if(v >= 32767 && indSpad != 0)
