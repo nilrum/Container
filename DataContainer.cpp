@@ -42,7 +42,7 @@ size_t TContainer::CountData() const
 
 TResult TContainer::LoadFile(const TString &path, bool isCheck)
 {
-    if(IsValid() == false) return TContainerRezult::InvHeader;
+    if(IsValid() == false) return TContainerResult::InvHeader;
     if(isCheck)
     {
         TResult r = header->CheckFile(path);

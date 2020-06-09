@@ -46,6 +46,9 @@ public:
     inline double FirstKey() const { return Key(0); }
     inline double LastKey() const { return Key(CountValue() - 1); }
 
+    inline double FirstValue(int array = 0) const { return Value(0, array); }
+    inline double LastValue(int array = 0) const { return Value(CountValue() - 1, array); }
+
     virtual void Insert(size_t index, const TVecDouble& keyValues = TVecDouble()){};
     virtual void Delete(size_t index, size_t count = 1){};
 
@@ -70,6 +73,7 @@ public:
     //если есть возможность отдает указатель на данные напрямую
     virtual const double* PtrKey() { return nullptr; };
     virtual const double* PtrValue(int array = 0){ return nullptr; };
+    virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
 
     void Assign(const TPtrData& value);
 
@@ -130,7 +134,7 @@ public:
 using TPtrRegHeader = std::unique_ptr<THeaderBase>;
 using TVecHeader = std::vector<TPtrRegHeader>;
 
-enum class TContainerRezult{ Ok, InvHeader};
+enum class TContainerResult{ Ok, InvHeader};
 
 class TContainer{
 public:
@@ -239,7 +243,7 @@ struct TRange<true>{
 };
 
 template <typename TPtr, bool isDepthUp>
-TVecUInt FindTryIndexes(const TPtr &ptr, double begin, double end, double convCoef, int& rezult)
+TVecUInt FindTryIndexes(const TPtr &ptr, double begin, double end, double convCoef, int& result)
 {
     typename TRange<isDepthUp>::TPredFirst check;
     typename TRange<isDepthUp>::TPredSecond checkEq;
@@ -273,18 +277,18 @@ TVecUInt FindTryIndexes(const TPtr &ptr, double begin, double end, double convCo
         }
     }
     if constexpr (isDepthUp)
-        rezult = (realIndex + 1) * realInc;
+        result = (realIndex + 1) * realInc;
     else
-        rezult = realIndex;//если положительное то реальное количество данных, если отриц то c какого начать
+        result = realIndex;//если положительное то реальное количество данных, если отриц то c какого начать
     return indx;
 }
 template <typename T>
-TVecUInt FindTryIndex(bool isUp, T* ptr, double begin, double end, double convCoef, int& rezult)
+TVecUInt FindTryIndex(bool isUp, T* ptr, double begin, double end, double convCoef, int& result)
 {
     if(isUp)
-        return FindTryIndexes<T*, true>(ptr, begin, end, convCoef, rezult);
+        return FindTryIndexes<T*, true>(ptr, begin, end, convCoef, result);
     else
-        return FindTryIndexes<T*, false>(ptr, begin, end, convCoef, rezult);
+        return FindTryIndexes<T*, false>(ptr, begin, end, convCoef, result);
 }
 
 

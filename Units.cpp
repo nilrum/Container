@@ -25,12 +25,28 @@ TUnits::~TUnits()
         Single() = nullptr;
 }
 
-void TUnits::SetDefault()
+void TUnits::SetNone()
 {
-    const TPtrUnitProfile& def = Customs()->Profile(Customs()->CurProfile());
     int count = TEnum(ucDepth).Names().size();
     for(int i = ucDepth; i <= count; i++)
-        WriteProperty(i, def->ReadProperty(i));
+        WriteProperty(i, 0);
+}
+
+void TUnits::SetDefault(const std::map<TUnitCategory, int>& set)
+{//делаем значения не выбранными по умолчанию
+    const TPtrUnitProfile& def = Customs()->CurProfile();
+    int count = TEnum(ucDepth).Names().size();
+    for(int i = ucDepth; i <= count; i++)
+    {
+        if(ReadProperty(i).ToInt() == 0)
+        {
+            auto it = set.find(TUnitCategory(i));
+            if(it == set.end())
+                WriteProperty(i, def->ReadProperty(i));
+            else
+                WriteProperty(i, it->second);
+        }
+    }
 }
 
 TString EnumNameFromCategory(TUnitCategory value)
@@ -59,9 +75,9 @@ TString FullUnitDepth(TDepthUnit value)
 TString ShortUnitDepth(TDepthUnit value)
 {
     if(value == duMeter)
-        return "m.";
+        return "m";
     else
-        return "ft.";
+        return "ft";
 }
 
 TEnum TUnitProfile::FromCategory(TUnitCategory cat)
@@ -77,6 +93,11 @@ TString TUnitProfile::FullName(TUnitCategory cat)
 TString TUnitProfile::ShortName(TUnitCategory cat)
 {
     return FullName(cat) + "_s";
+}
+
+void TUnitProfile::SetFromCategory(TUnitCategory cat, int value)
+{
+    WriteProperty(cat , value);
 }
 
 double MeterToFoot(double value)

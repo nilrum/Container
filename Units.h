@@ -32,6 +32,8 @@ public:
     TString FullName(TUnitCategory cat);     //возвращает в строковом представлении cat == ucDepth -> ucMeter or ucFoot
     TString ShortName(TUnitCategory cat);    //возвращает в строковом представлении короткий вариант cat == ucDepth -> ucMeter_s or ucFoot_s
 
+    void SetFromCategory(TUnitCategory cat, int value);
+
     PROPERTIES(TUnitProfile, TPropertyClass,
         PROPERTY(TDepthUnit, depth, Depth, SetDepth);
         PROPERTY(TSpeedUnit, speed, Speed, SetSpeed);
@@ -72,12 +74,14 @@ public:
     TUnitCustoms(){ name = "UnitCustoms"; profiles.emplace_back(std::make_shared<TUnitProfile>()); }
     PROPERTIES(TUnitCustoms, TPropertyClass,
         PROPERTY_ARRAY(TUnitProfile, profils, CountProfiles, Profile, AddProfile, DelProfile);
-        PROPERTY(int, curProfile, CurProfile, SetCurProfile);
+        PROPERTY(int, indProfile, IndProfile, SetIndProfile);
     )
     PROPERTY_ARRAY_FUN(TPtrUnitProfile, profiles, CountProfiles, Profile, AddProfile, DelProfile);
-    PROPERTY_FUN(int, curProfile, CurProfile, SetCurProfile);
+    PROPERTY_FUN(int, indProfile, IndProfile, SetIndProfile);
+
+    const TPtrUnitProfile& CurProfile() const { return profiles[indProfile]; }
 private:
-    int curProfile = 0;
+    int indProfile = 0;
     std::vector<TPtrUnitProfile> profiles;
 };
 
@@ -88,7 +92,8 @@ public:
     TUnits();
     ~TUnits();
 
-    void SetDefault();//применяет настройки по умолчанию
+    void SetNone();//устанавливает не выбранные значения
+    void SetDefault(const std::map<TUnitCategory, int>& set);//применяет настройки по умолчанию или переданное значение
 
     STATIC_ARG(TUnits*, Single, nullptr);                                 //текущие ед измерения
     STATIC_ARG(TPtrUnitCustoms, Customs, std::make_shared<TUnitCustoms>());//настройки по умолчанию для ед измерения

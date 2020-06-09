@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <memory>
 #include <cstring>
-enum class TBinFileRezult{ Ok, ErrOpen, ErrVersion };
+enum class TBinFileResult{ Ok, ErrOpen, ErrVersion };
 
 class TBinFile{
 public:
@@ -47,17 +47,17 @@ public:
     TResult CheckVersion(const TString& path) override
     {
         auto file = OpenFile(path);
-        if(file.get() == nullptr) return TBinFileRezult::ErrOpen;
+        if(file.get() == nullptr) return TBinFileResult::ErrOpen;
         THeader h;
         std::fread(&h, sizeof(THeader), 1, file.get());
-        return CheckHeader(h)? TBinFileRezult::Ok : TBinFileRezult::ErrVersion;
+        return CheckHeader(h) ? TBinFileResult::Ok : TBinFileResult::ErrVersion;
     }
     virtual TResult LoadFile(const TString& path, bool isCheck = true) override
     {
         auto file = OpenFile(path);
-        if(file.get() == nullptr) return TBinFileRezult::ErrOpen;
+        if(file.get() == nullptr) return TBinFileResult::ErrOpen;
         fread(&header, sizeof(THeader), 1, file.get());
-        if(isCheck && CheckHeader(header) == false) return TBinFileRezult::ErrVersion;
+        if(isCheck && CheckHeader(header) == false) return TBinFileResult::ErrVersion;
         size_t count1 = std::ftell(file.get());
         std::fseek(file.get(), 0, SEEK_END);
         size_t count = std::ftell(file.get());
@@ -66,7 +66,7 @@ public:
         std::fseek(file.get(), sizeof(THeader), SEEK_SET);
         for(size_t i = 0; i < data.size(); ++i)
             std::fread(&data[i], sizeof(TData), 1, file.get());
-        return TBinFileRezult::Ok;
+        return TBinFileResult::Ok;
     }
 
     virtual unsigned char* PtrHeader() override
