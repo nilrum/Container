@@ -179,7 +179,7 @@ void TLas::Clear()
 TResult TLas::Read(const TString &path, bool andValues)
 {
     Clear();
-    std::ifstream stream(path);
+    std::ifstream stream(path, std::ifstream::binary);
     if(stream.is_open() == false) return TResultLas::FileNotOpen;
 
 
@@ -206,6 +206,7 @@ TResult TLas::Read(const TString &path, bool andValues)
     //проверка что все секции были прочитаны
     for(auto info : readInfos)
         if(info.isReaded == false) return TResultLas::LasSecNotFound;
+    offsetAsciiData = stream.tellg();
     if(andValues)
         return ReadAscii(stream, line);
     return TResult();
@@ -225,7 +226,6 @@ TString TLas::ReadLine(std::ifstream &stream)
     TString res;
     while(stream.eof() == false)
     {
-        offsetAsciiData = stream.tellg();
         std::getline(stream, res);
         if(res.empty() == false && res[0] != '#') return res;
     }
@@ -335,6 +335,35 @@ TResult TLas::ReadAscii(std::ifstream &stream, TString &line)
 
 TResult TLas::ReadAsciiWrap(std::ifstream &stream, TString &line)
 {
+    TParser pars(line.data());
+    size_t i = 0;
+    while(true)
+    {
+        auto& d = lasCurves[i];
+
+        if(d.empty())
+        {
+            if (pars.IgnoreNumber() == 0) return TResultLas::ErrCountReadData;
+        }
+        else
+        {
+            if (pars.IsNumber(d.back()) == false) return TResultLas::ErrCountReadData;//нехватило данных для считывания
+            if(d.back() == nullVal) d.back() = NAN;
+        }
+        if(pars.IsEnd())
+        {
+            line = ReadLine(stream);
+            if(line.empty()) break;
+            pars.Set(line.data());
+        }
+        i++;
+        if(i >= lasCurves.size())
+        {
+            i = 0;
+            for (auto &d : lasCurves)
+                if (d.empty() == false) d.emplace_back(0);
+        }
+    }
     return TResult();
 }
 
@@ -357,14 +386,14 @@ TResult TLas::ReadAsciiNoWrap(std::ifstream &stream, TString &line)
             }
         }
         line = ReadLine(stream);
-        if(line.empty())
-            break;
-        else
+        if(line.empty() == false)
         {
             for (auto &d : lasCurves)
                 if (d.empty() == false) d.emplace_back(0);
             pars.Set(line.data());
         }
+        else
+            break;
     }
     return TResult();
 }
@@ -512,6 +541,12 @@ TString TParser::Last()
     IsSpace();
     if(*text) return TString(text);
     return TString();
+}
+
+bool TParser::IsEnd()
+{
+    IsSpace();
+    return !(*text);
 }
 
 

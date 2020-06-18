@@ -145,3 +145,40 @@ TEST(TLasHeader, LoadFile1)
     EXPECT_EQ(data4->LastKey(), 5281.21);
     EXPECT_EQ(data4->LastValue(), 0.390);
 }
+
+TEST(TLasHeader, LoadFile2)
+{
+    TContainer cont = TContainer::CreateFromFile("2.las");
+    EXPECT_TRUE(cont.IsValid());
+
+    TVecData loadable = cont.Header()->LoadableData("2.las");
+    EXPECT_EQ(loadable.size(), 15);
+    EXPECT_EQ(cont.Header()->DepthUnit(), duMeter);
+    EXPECT_TRUE(cont.LoadData(TVecData(loadable.begin() + 2, loadable.end() - 5)).IsNoError());
+    EXPECT_EQ(cont.CountData(), 8);
+
+
+    TPtrData data0 = cont.Data(0);
+    EXPECT_EQ(data0->Name(), "GRC");
+
+    EXPECT_EQ(data0->FirstKey(), 6700.77);
+    EXPECT_EQ(data0->FirstValue(), 2.);
+
+    EXPECT_EQ(data0->Key(1), 6700.77);
+    EXPECT_EQ(data0->Value(1), 1.);
+
+    EXPECT_EQ(data0->LastKey(), -0.42);
+    EXPECT_EQ(data0->LastValue(), 4.);
+
+    TPtrData data7 = cont.Data(7);
+    EXPECT_EQ(data7->Name(), "ZS10");
+
+    EXPECT_EQ(data7->FirstKey(), 6700.77);
+    EXPECT_EQ(data7->FirstValue(), 24998.);
+
+    EXPECT_EQ(data7->Key(1), 6700.77);
+    EXPECT_EQ(data7->Value(1), 24999.);
+
+    EXPECT_EQ(data7->LastKey(), -0.42);
+    EXPECT_EQ(data7->LastValue(), 26749.);
+}

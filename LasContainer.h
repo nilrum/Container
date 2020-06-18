@@ -20,6 +20,7 @@ public:
     bool IsNumber(double& val);
     int IgnoreNumber();
     bool IsSpace();   //проверяет и читает все пробельные символы
+    bool IsEnd();
 
     bool ReadId(TString& value);
     bool ReadUntil(int stop, TString& value);
@@ -53,7 +54,7 @@ protected:
     bool isWrap = false;
     double nullVal = -9999.25;
 
-    std::vector<TVecDouble> lasCurves;
+    TVecVecDouble lasCurves;
     int64_t offsetAsciiData = 0;
 
     using TReadSection = std::function<TResult(std::ifstream& stream, TString& line)>;

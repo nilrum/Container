@@ -181,4 +181,49 @@ TString Cp1251ToUt8(const TString& val);
 
 #define CLB(TYPE, KA, KB, ENUM) SetClb(HEADER_CLB(TYPE, KA), HEADER_CLB(TYPE, KB), TUnitCategory::ENUM)
 
+
+#define HEADER_BIN(TYPE_HEADER, BASE_HEADER, FORMAT, INFO, SET_INFO, LOADABLE)\
+    class TYPE_HEADER : public BASE_HEADER{\
+    public:\
+        TYPE_HEADER():BASE_HEADER([](){ return std::make_shared<FORMAT>(); }){};\
+        virtual TPtrHeader Clone() override { return std::make_shared<TYPE_HEADER>(); };\
+        virtual TVariable Info(int index) const override\
+        {\
+            if(file.get() == nullptr) return TVariable();\
+            const FORMAT::THeaderType& h = *((FORMAT::THeaderType*)(file->PtrHeader()));\
+            switch (index){\
+                INFO\
+                default: return TString();\
+            }\
+        }\
+        virtual void SetInfo(int index, const TVariable& value) override\
+        {\
+            if(file.get() == nullptr) return;\
+            FORMAT::THeaderType& h = *((FORMAT::THeaderType*)file->PtrHeader());\
+            switch (index){\
+                SET_INFO\
+                }\
+        }\
+        virtual TVecData LoadableData(const TString& path) override\
+        {\
+            file = createFile();\
+            if (file->LoadFile(path).IsError()) return TVecData();\
+            TVecData res;\
+            LOADABLE\
+            return res;\
+        }\
+    protected:\
+        TPtrBinFile file;\
+    };\
+    namespace {\
+        const bool addHeader = TContainer::RegisterHeader(std::make_unique<TYPE_HEADER>());\
+    }
+
+
+#define VAR_LIST(...) __VA_ARGS__
+#define INFO(INDEX, RET) case INDEX: return RET;
+#define SET_INFO(INDEX, VAL) case INDEX: VAL; break;
+
+
+
 #endif //TESTAPP_BINCONTAINER_H
