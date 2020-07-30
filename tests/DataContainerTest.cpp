@@ -55,20 +55,22 @@ TEST(FindIndex, FindTryIndexes)
 {
     TVecDouble depthUp = { 200.1, 190.2, 180.3, 185.4, 170.5};
     TVecDouble depthDown = { 170.1, 180.2, 175.3, 174.4, 200.5};
-    int result = 0;
-    TVecUInt rezUp = FindTryIndex(true, &depthUp, 170., 200., 1, result);
-    ASSERT_EQ(result, -1);
-    result *= -1;
-    EXPECT_EQ(rezUp[result + 0], 4);
-    EXPECT_EQ(rezUp[result + 1], 2);
-    EXPECT_EQ(rezUp[result + 2], 1);
-    EXPECT_EQ(rezUp[result + 3], 0);
+    int first = 0;
+    int last = 0;
+    TVecUInt rezUp = FindTryIndex(true, &depthUp, 170., 200., 1, first, last);
+    ASSERT_EQ(first, 1);
+    ASSERT_EQ(last, 5);
+    EXPECT_EQ(rezUp[first + 0], 4);
+    EXPECT_EQ(rezUp[first + 1], 2);
+    EXPECT_EQ(rezUp[first + 2], 1);
+    EXPECT_EQ(rezUp[first + 3], 0);
 
-    TVecUInt rezDown = FindTryIndex(false, &depthDown, 170., 200., 1, result);
-    ASSERT_EQ(result, 3);
-    EXPECT_EQ(rezDown[0], 0);
-    EXPECT_EQ(rezDown[1], 1);
-    EXPECT_EQ(rezDown[2], 4);
+    TVecUInt rezDown = FindTryIndex(false, &depthDown, 170., 200., 1, first, last);
+    EXPECT_EQ(rezDown[first + 0], 0);
+    EXPECT_EQ(rezDown[first + 1], 1);
+    EXPECT_EQ(rezDown[first + 2], 4);
+    ASSERT_EQ(first, 0);
+    ASSERT_EQ(last, 3);
 }
 
 

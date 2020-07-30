@@ -4,6 +4,7 @@
 
 #include "BinContainer.h"
 
+INIT_PROPERTYS(TDataBinProp)
 
 TString THeaderBin::Version() const
 {

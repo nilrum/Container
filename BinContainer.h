@@ -30,36 +30,48 @@ protected:
     }
 };
 
+class TDataBinProp : public TDataBase{
+    PROPERTIES(TDataBinProp, TDataBase,
+            PROPERTY(double, coefA, CoefA, SetCoefA);
+            PROPERTY(double, coefB, CoefB, SetCoefB);
+            )
+    PROPERTY_FUN(double, coefA, CoefA, SetCoefA);
+    PROPERTY_FUN(double, coefB, CoefB, SetCoefB);
+protected:
+    double coefA = 1.;      //калибровачные коэффициенты А и
+    double coefB = 0.;     //В
+};
+
 template <typename TValue, typename TKey>
-class TDataBin : public TDataBase{
+class TDataBin : public TDataBinProp {
 public:
-    TDataBin(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f):
-        unit(u), offset(ov), offsetKey(ok), file(f){ name = n; }
+    TDataBin(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f) :
+            unit(u), offset(ov), offsetKey(ok), file(f)
+    { name = n; }
 
     virtual TString Unit() const override
     {
         return unit;
     }
 
-    virtual void SetUnit(const TString& value) override
+    virtual void SetUnit(const TString &value) override
     {
         unit = value;
     }
 
     virtual double Key(int index) const override
     {
-        return  *(reinterpret_cast<TKey*>(file->PtrData(index) + offsetKey));
+        return KeyImpl(index);
     }
 
     virtual double Value(int index, int array = 0) const override
     {
-        TValue v = *(reinterpret_cast<TValue*>(file->PtrData(index) + offset));
-        return  v * coefA + coefB;
+        return ValImpl(index, array);
     }
 
     virtual void SetValue(int index, double value, int array = 0) override
     {
-        *(reinterpret_cast<TValue*>(file->PtrData(index) + offset)) = TValue((value - coefB) / coefA);
+        *(ValImpl(index) + array) = TValue((value - TDataBinProp::coefB) / TDataBinProp::coefA);
     }
 
     virtual size_t CountValue() const override
@@ -67,9 +79,9 @@ public:
         return file->CountData();
     }
 
-    TDataBin<TValue, TKey>* SetClb(double a, double b, TUnitCategory cat)
+    TDataBin<TValue, TKey> *SetClb(double a, double b, TUnitCategory cat)
     {
-        if(a != 0.)
+        if (a != 0.)
         {
             coefA = a;
             coefB = b;
@@ -78,14 +90,32 @@ public:
         return this;
     }
 
-    virtual double KeyDelta() const { return keyDelta; }
-    virtual void SetKeyDelta(double value) { keyDelta = value; }
+    virtual double KeyDelta() const
+    { return keyDelta; }
 
-    virtual TVecDouble Coefs() const override { return {coefB, coefA}; }
+    virtual void SetKeyDelta(double value)
+    { keyDelta = value; }
+
+    virtual TVecDouble Coefs() const override
+    { return {coefB, coefA}; }
+
     void SetCatAndInd(int cat, int ind)
     {
         category = cat;
         indUnit = ind;
+    }
+
+    virtual double CalcLinValue(int index, int array, int first, int last, const TVecUInt &indx) override
+    {
+        if(index == first)
+            return ValImpl(indx[index + 1], array);
+        else
+        if(index + 1 == last)
+            return ValImpl(indx[index - 1], array);
+        else
+        {
+            return LinValue(indx.begin() + index, ValImpl(indx[index - 1], array), ValImpl(indx[index + 1], array));
+        }
     }
 protected:
     TString title;          //название кривой
@@ -93,10 +123,43 @@ protected:
     size_t offset = 0;      //смещение относительно начало структуры
     size_t offsetKey = 0;   //смещение для глубины
     double coefKey = 1.;    //коэффициент для глубины до целых единиц(м. фт.)
-    double coefA = 1.;      //калибровачные коэффициенты А и
-    double coefB = 0.;     //В
     double keyDelta = 0.;   //точка записи для данных
     TPtrBinFile file;   //данные файла
+
+    inline TKey KeyImpl(int index) const   { return  *(reinterpret_cast<TKey*>(file->PtrData(index) + offsetKey)); }
+    inline TValue* ValImpl(int index) const { return  reinterpret_cast<TValue*>(file->PtrData(index) + offset); }
+    inline double ValImpl(int index, int array) const { return (*(ValImpl(index) + array)) * coefA + coefB; }
+    inline double LinValue(const TVecUInt::const_iterator& it, double vb, double ve)
+    {
+        double kb = KeyImpl(*(it - 1));
+        double kc = KeyImpl(*(it));
+        double ke = KeyImpl(*(it + 1));
+        double scale = (kc - kb) / (ke - kb);
+        return vb + (ve - vb) * scale;
+    }
+};
+
+template<typename T, size_t Offset>
+class TNullChecker{
+protected:
+    bool IsNull(const unsigned char* ptr) const
+    {
+        return *reinterpret_cast<const T*>(ptr + Offset) == 0;
+    }
+};
+
+template <typename TValue, typename TKey, typename TChecker>
+class TDataBinNull : public TDataBin<TValue, TKey>, public TChecker {
+public:
+    TDataBinNull(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f) :
+            TDataBin<TValue, TKey>(n, u, ov, ok, f){}
+
+    virtual double Value(int index, int array = 0) const override
+    {
+        if(TChecker::IsNull(this->file->PtrData(index)))
+            return NAN;
+        return TDataBin<TValue, TKey>::ValImpl(index, array);
+    }
 };
 
 using TCountCoef = std::vector<std::tuple<size_t, double>>;
@@ -138,7 +201,7 @@ protected:
         cashIndex = index;
         int indSpad = coef.size() - 1;
 
-        TValue* ptrSpad = reinterpret_cast<TValue*>(this->file->PtrData(index) + this->offset);
+        TValue* ptrSpad = TDataBin<TValue, TKey>::ValImpl(index);
 
         size_t offsetSpad = std::get<0>(coef[indSpad]);
         double kus = std::get<1>(coef[indSpad]);
@@ -158,6 +221,120 @@ protected:
     }
 };
 
+template <typename TValue, typename TKey, size_t N>
+struct TDataBinMark : public TDataBin<TValue, TKey>{
+public:
+    TDataBinMark(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
+            TDataBin<TValue, TKey>(n, u, ov, ok, f), coef(arrayCoef)
+    {
+        for(size_t i = 0; i < coef.size(); i++)
+            coef[i] = coef.back() / coef[i];
+
+    }
+    virtual double Value(int index, int array = 0) const override
+    {
+        if(index != cashIndex)
+        {
+            cashIndex = index;
+            CalcCash(index, cashValue);
+        }
+        return cashValue[array];
+    }
+
+    virtual size_t CountArray() const override { return N; }
+protected:
+    mutable int cashIndex = -1;
+    mutable double cashValue[N];
+    TVecDouble coef;
+    void CalcCash(int index, double* cash) const
+    {
+        int indKus = 0;
+        size_t count = N + coef.size() - 1;
+        TValue* ptrSpad = TDataBin<TValue, TKey>::ValImpl(index);
+        for(int i = 0, ir = 0; (i < count) && (ir < N); i++)
+        {
+            if(ptrSpad[i] == -32768)//если дошли до маркера меняем коэффициент
+            {
+                if(indKus < coef.size())
+                    indKus++;
+                continue;
+            }
+            cash[ir] = ptrSpad[i] * coef[indKus];
+            ir++;
+        }
+    }
+};
+
+template <typename TValue, typename TKey, size_t N, typename TChecker>
+struct TDataBinMarkNull : public TDataBinMark<TValue, TKey, N>, public TChecker{
+public:
+    TDataBinMarkNull(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
+            TDataBinMark<TValue, TKey, N>(n, u, ov, ok, f, arrayCoef){};
+    virtual double Value(int index, int array = 0) const override
+    {
+        if(TChecker::IsNull(this->file->PtrData(index)))
+            return NAN;
+        double* ptr = this->cashValue;
+        if(index != this->cashIndex)
+        {
+            if(index == cashIndexAfter)
+                ptr = cashAfter;
+            else
+                if(index == cashIndexBefore)
+                    ptr = cashBefore;
+                else
+                {
+                    this->cashIndex = index;
+                    this->CalcCash(this->cashIndex, this->cashValue);
+                }
+        }
+        return ptr[array];
+    }
+
+    virtual double CalcLinValue(int index, int array, int first, int last, const TVecUInt &indx) override
+    {
+        if(index == first)
+        {
+            CheckAfter(indx[index + 1]);
+            return cashAfter[array];
+        }
+        else
+        if(index + 1 == last)
+        {
+            CheckBefore(indx[index - 1]);
+            return cashBefore[array];
+        }
+        else
+        {
+            CheckBefore(indx[index - 1]);
+            CheckAfter(indx[index + 1]);
+            return this->LinValue(indx.begin() + index, cashBefore[array], cashAfter[array]);
+        }
+    }
+protected:
+    mutable int cashIndexBefore = -1;
+    mutable int cashIndexAfter = -1;
+    mutable double cashBefore[N];
+    mutable double cashAfter[N];
+
+    inline void CheckBefore(int index)
+    {
+        if(index != cashIndexBefore)
+        {
+            cashIndexBefore = index;
+            this->CalcCash(cashIndexBefore, cashBefore);
+        }
+    }
+    inline void CheckAfter(int index)
+    {
+        if(index != cashIndexAfter)
+        {
+            cashIndexAfter = index;
+            this->CalcCash(cashIndexAfter, cashAfter);
+        }
+    }
+};
+
 TString DosToUtf8(const TString& dos);
 TString Cp866ToCp1251(const TString& dos);
 TString Cp1251ToUt8(const TString& val);
@@ -168,12 +345,16 @@ TString Cp1251ToUt8(const TString& val);
     size_t ok = offsetof(TStruct::TDataType, NAME);\
     double coefKey = 1.;//TODO как лучше сделать
 
-#define DOUBLE_LINE(NAME, UNIT, TYPE)\
-    std::make_shared<TDataBin<TYPE, TKey>>(#NAME, #UNIT, offsetof(TStruct::TDataType, NAME), ok, file)
+#define DOUBLE_LINE_T(NAME, UNIT, DATATYPE, TYPE)\
+    std::make_shared<DATATYPE<TYPE, TKey>>(#NAME, #UNIT, offsetof(TStruct::TDataType, NAME), ok, file)
+
+#define DOUBLE_LINE(NAME, UNIT, TYPE) DOUBLE_LINE_T(NAME, UNIT, TDataBin, TYPE)
+
 
 #define DOUBLE_LINE_ARRAY(NAME, OFF_NAME, UNIT, TYPE, ALG, COUNT, COEF)\
     std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, offsetof(TStruct::TDataType, OFF_NAME), ok, file, COEF)
 
+#define COEF(...) TVecDouble{  __VA_ARGS__ }
 #define COUNTCOEF(...) TCountCoef{  __VA_ARGS__ }
 
 #define HEADER_CLB(TYPE, NAME)\

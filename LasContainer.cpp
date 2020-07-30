@@ -5,6 +5,8 @@
 #include "LasContainer.h"
 #include <fstream>
 
+INIT_PROPERTYS(TDataLas)
+
 namespace {
     const bool addHeader = TContainer::RegisterHeader(std::make_unique<THeaderLas>());
 }
@@ -94,7 +96,7 @@ void THeaderLas::AddCurveInfo(const TVecString &info)
     if(isCheckingFile) return;//при проверке файла не добавляем кривые
 
     if(lasCurves.size())
-        datas.emplace_back(std::make_shared<TDataLas>(info[0], info[1], depthVec));
+        datas.emplace_back(std::make_shared<TDataLas>(info[0], info[1], info[2], depthVec));
     TLas::AddCurveInfo(info);
 }
 
@@ -550,10 +552,11 @@ bool TParser::IsEnd()
 }
 
 
-TDataLas::TDataLas(const TString &nameCurve, const TString &unitCurve, const TPtrDepthVector& depthVector)
+TDataLas::TDataLas(const TString &nameCurve, const TString &unitCurve, const TString& com, const TPtrDepthVector& depthVector)
 {
     name = nameCurve;
     unit = unitCurve;
+    comment = com;
     depth = depthVector;
 }
 

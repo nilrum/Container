@@ -122,7 +122,8 @@ protected:
 
 class TDataLas : public TDataBase{
 public:
-    TDataLas(const TString& nameCurve, const TString& unitCurve, const TPtrDepthVector& depthVector);
+    TDataLas() = default;
+    TDataLas(const TString& nameCurve, const TString& unitCurve, const TString& com, const TPtrDepthVector& depthVector);
 
     virtual TString Unit() const;
     virtual void SetUnit(const TString& value);
@@ -136,8 +137,15 @@ public:
     virtual const double* PtrKey();
     virtual const double* PtrValue(int array = 0);
     virtual void SwapValue(TVecDouble& value);
+
+    PROPERTIES(TDataLas, TDataBase,
+        PROPERTY(TString, comment, Comment, SetComment);
+    )
+
+    PROPERTY_FUN(TString, comment, Comment, SetComment);
 protected:
     TString unit;
+    TString comment;
     TPtrDepthVector depth;
     TVecDouble values;
 };

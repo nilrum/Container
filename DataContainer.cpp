@@ -188,6 +188,22 @@ void TDataBase::Assign(const TPtrData &value)
     SetKeyDelta(value->KeyDelta());
 }
 
+TEnum TDataBase::IndUnit() const
+{
+    return UNIT->FromCategory(category).SetIndex(indUnit);
+}
+
+void TDataBase::SetIndUnitEn(const TEnum &value)
+{
+    indUnit = value;
+    SetUnit(UNIT->FromCategory(category).Names()[indUnit]);
+}
+
+void TDataBase::SetIndUnit(int value)
+{
+    indUnit = value;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 void TUsedClass::SetParent(const TPtrUsedClass &value)
 {
@@ -205,4 +221,9 @@ void TUsedClass::CallUsed(const TPtrData &value)
 {
     TPtrUsedClass p = parent.lock();
     if(p) p->CallUsed(value);
+}
+
+const TWPtrUsedClass& TUsedClass::Parent() const
+{
+    return parent;
 }

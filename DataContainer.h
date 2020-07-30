@@ -21,6 +21,7 @@ using TOnDataEdit = sigslot::signal<>;
 class TUsedClass : public TPropertyClass{
 public:
     virtual TString FullName() const;
+    const TWPtrUsedClass& Parent() const;
     void SetParent(const TPtrUsedClass& value);
 protected:
     TWPtrUsedClass parent;
@@ -82,10 +83,15 @@ public:
         PROPERTY_READ(size_t, countArray, CountArray);
         PROPERTY(int, tag, Tag, SetTag);
         PROPERTY(bool, isUsed, IsUsed, SetIsUsed).NoSerialization();
+        PROPERTY(TUnitCategory, category, Category, SetCategory).NoSerialization();
+        PROPERTY(TEnum, indUnit, IndUnit, SetIndUnitEn).NoSerialization();
     )
     PROPERTY_FUN(int, tag, Tag, SetTag);
     PROPERTY_FUN(TUnitCategory, category, Category, SetCategory);
-    PROPERTY_FUN(int, indUnit, IndUnit, SetIndUnit);
+
+    TEnum IndUnit() const;
+    void SetIndUnitEn(const TEnum& value);
+    void SetIndUnit(int value);
 
     virtual TVecDouble Coefs() const { return TVecDouble(); }
     virtual void SetCoefs(const TVecDouble& value) { }
@@ -96,6 +102,8 @@ public:
     bool IsUsed() const;
     virtual void SetIsUsed(bool value);
     void SetIsUsedNoCall(bool value);
+
+    virtual double CalcLinValue(int index, int array, int first, int last, const TVecUInt& indx){ return NAN; };
 protected:
     int isUsed = false;
     int tag = 0;
@@ -129,7 +137,6 @@ public:
 
     static TVecString InitDefTitle();
     static const TVecString& DefTitle(){ static TVecString defTitle = InitDefTitle(); return defTitle; }
-
 };
 using TPtrRegHeader = std::unique_ptr<THeaderBase>;
 using TVecHeader = std::vector<TPtrRegHeader>;
@@ -184,23 +191,26 @@ public:
     {
         cont = value;
         loadable = cont->Header()->LoadableData(path);
-        selected.resize(loadable.size(), true);
+        SetIsSelected(true);
     }
     virtual TResult Select()
     {//возвращаем список выбраных кривых
         TVecData rez;
-        for(size_t i = 0; i < selected.size(); i++)
-            if(selected[i]) rez.push_back(loadable[i]);
+        for(size_t i = 0; i < loadable.size(); i++)
+            if(loadable[i]->IsUsed()) rez.push_back(loadable[i]);
         return cont->LoadData(rez);
     }
     TVecData& Loadable() { return loadable; }
-    TVecBool& Selected() { return selected; }
 
     TDepthUnit FromConvert() const { return fromConvert; }
+    virtual double Step() const { return NAN; };
+    virtual double Begin() const{ return NAN; };
+    virtual double End() const { return NAN; };
+
 
     TVecBool EditableVector()
     {
-        TVecBool rez(selected.size());
+        TVecBool rez(loadable.size());
         for(size_t i = 0; i < rez.size(); i++)
             rez[i] = loadable[i]->Category() != ucNone && loadable[i]->IndUnit() == 0;
         return rez;
@@ -208,15 +218,20 @@ public:
 
     bool IsSelected() const
     {//выбрана ли хоть одна кривая
-        for(auto v : selected)
-            if(v == true) return true;
+        for(auto v : loadable)
+            if(v->IsUsed()) return true;
         return false;
+    }
+
+    void SetIsSelected(bool value)
+    {
+        for(const auto& v : loadable)
+            v->SetIsUsedNoCall(value);
     }
 
 protected:
     TContainer* cont = nullptr;//TODO подумать над этим
     TVecData loadable;
-    TVecBool selected;
     TDepthUnit fromConvert = duNone; //из чего конвертировать
 };
 
@@ -283,12 +298,20 @@ TVecUInt FindTryIndexes(const TPtr &ptr, double begin, double end, double convCo
     return indx;
 }
 template <typename T>
-TVecUInt FindTryIndex(bool isUp, T* ptr, double begin, double end, double convCoef, int& result)
+TVecUInt FindTryIndex(bool isUp, T* ptr, double begin, double end, double convCoef, int& first, int& last)
 {
+    TVecUInt res;
     if(isUp)
-        return FindTryIndexes<T*, true>(ptr, begin, end, convCoef, result);
+        res = FindTryIndexes<T*, true>(ptr, begin, end, convCoef, last);
     else
-        return FindTryIndexes<T*, false>(ptr, begin, end, convCoef, result);
+        res = FindTryIndexes<T*, false>(ptr, begin, end, convCoef, last);
+    first = 0;
+    if (last <= 0)
+    {
+        first = -last;
+        last = res.size();
+    }
+    return res;
 }
 
 
