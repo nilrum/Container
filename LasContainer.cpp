@@ -5,6 +5,7 @@
 #include "LasContainer.h"
 #include <fstream>
 
+
 INIT_PROPERTYS(TDataLas)
 
 namespace {
@@ -100,7 +101,7 @@ void THeaderLas::AddCurveInfo(const TVecString &info)
     TLas::AddCurveInfo(info);
 }
 
-TString THeaderLas::TitleInfo(int index) const
+TString THeaderLas::TitleInfo(size_t  index) const
 {
     if(index < iiCountInfo)
         return THeaderBase::TitleInfo(index);
@@ -112,25 +113,25 @@ TString THeaderLas::TitleInfo(int index) const
     }
 }
 
-void THeaderLas::SetTitleInfo(int index, const TString &value)
+void THeaderLas::SetTitleInfo(size_t  index, const TString &value)
 {
     if(index >= iiCountInfo)
     {
-        int newIndex = index - iiCountInfo;
+        size_t newIndex = index - iiCountInfo;
         if(newIndex >= othTitle.size())
             othTitle.resize(newIndex + 1);
         othTitle[newIndex] = value;
     }
 }
 
-TVariable THeaderLas::Info(int index) const
+TVariable THeaderLas::Info(size_t  index) const
 {
     if(index < headerInfo.size())
         return headerInfo[index];
     return TVariable();
 }
 
-void THeaderLas::SetInfo(int index, const TVariable &value)
+void THeaderLas::SetInfo(size_t  index, const TVariable &value)
 {
     if(index >= headerInfo.size())
         headerInfo.resize(index + 1);
@@ -160,11 +161,11 @@ TVecString THeaderLas::InitLasHeaderNames()
 //----------------------------------------------------------------------------------------------------------------------
 TLas::TLas():
     readInfos{
-            {false, "~V", [this](std::ifstream& stream, TString& line) { return ReadVersion(stream, line); }},
-            {false, "~W", [this](std::ifstream& stream, TString& line) { return ReadWell(stream, line); }},
-            {false, "~C", [this](std::ifstream& stream, TString& line) { return ReadCurves(stream, line); }},
-            {false, "~P", [this](std::ifstream& stream, TString& line) { return ReadParams(stream, line); }},
-            {false, "~O", [this](std::ifstream& stream, TString& line) { return ReadOther(stream, line); }},
+            {false, "~V", [this](TStream& stream, TString& line) { return ReadVersion(stream, line); }},
+            {false, "~W", [this](TStream& stream, TString& line) { return ReadWell(stream, line); }},
+            {false, "~C", [this](TStream& stream, TString& line) { return ReadCurves(stream, line); }},
+            {false, "~P", [this](TStream& stream, TString& line) { return ReadParams(stream, line); }},
+            {false, "~O", [this](TStream& stream, TString& line) { return ReadOther(stream, line); }},
     }
 {
 
@@ -181,7 +182,8 @@ void TLas::Clear()
 TResult TLas::Read(const TString &path, bool andValues)
 {
     Clear();
-    std::ifstream stream(path, std::ifstream::binary);
+    //std::wstring p(L"D:/Work/DataLog/MID_Soft/Тест/TC-9N_WBD_Thickness.las");
+    TStream stream(path, std::ifstream::binary);
     if(stream.is_open() == false) return TResultLas::FileNotOpen;
 
 
@@ -216,14 +218,14 @@ TResult TLas::Read(const TString &path, bool andValues)
 
 TResult TLas::ReadData(const TString& path)
 {
-    std::ifstream stream(path);
+    TStream stream(path);
     if(stream.is_open() == false) return TResultLas::FileNotOpen;
     stream.seekg(offsetAsciiData);
     TString line = ReadLine(stream);
     return ReadAscii(stream, line);
 }
 
-TString TLas::ReadLine(std::ifstream &stream)
+TString TLas::ReadLine(TStream& stream)
 {
     TString res;
     while(stream.eof() == false)
@@ -234,7 +236,7 @@ TString TLas::ReadLine(std::ifstream &stream)
     return res;
 }
 
-TResult TLas::ReadVersion(std::ifstream& stream, TString& line)
+TResult TLas::ReadVersion(TStream& stream, TString& line)
 {
     line = ReadLine(stream);//пропускаем ~V
     if(line.empty()) return TResultLas::BadSintax;
@@ -258,7 +260,7 @@ TResult TLas::ReadVersion(std::ifstream& stream, TString& line)
     return TResult();
 }
 
-TResult TLas::ReadWell(std::ifstream& stream, TString& line)
+TResult TLas::ReadWell(TStream& stream, TString& line)
 {
     line = ReadLine(stream);//пропускаем ~W
     if(line.empty()) return TResultLas::BadSintax;
@@ -275,7 +277,7 @@ TResult TLas::ReadWell(std::ifstream& stream, TString& line)
     return TResult();
 }
 
-TResult TLas::ReadCurves(std::ifstream& stream, TString& line)
+TResult TLas::ReadCurves(TStream& stream, TString& line)
 {
     line = ReadLine(stream);//пропускаем ~C
     if(line.empty()) return TResultLas::BadSintax;
@@ -292,7 +294,7 @@ TResult TLas::ReadCurves(std::ifstream& stream, TString& line)
     return TResult();
 }
 
-TResult TLas::ReadParams(std::ifstream& stream, TString& line)
+TResult TLas::ReadParams(TStream& stream, TString& line)
 {
     do
     {
@@ -301,7 +303,7 @@ TResult TLas::ReadParams(std::ifstream& stream, TString& line)
     return TResult();
 }
 
-TResult TLas::ReadOther(std::ifstream& stream, TString& line)
+TResult TLas::ReadOther(TStream& stream, TString& line)
 {
     do
     {
@@ -324,7 +326,7 @@ TResult TLas::ReadParam(const TString &line, TVecString& params, bool readVal)
     return TResult();
 }
 
-TResult TLas::ReadAscii(std::ifstream &stream, TString &line)
+TResult TLas::ReadAscii(TStream& stream, TString &line)
 {
     if(line[0] == '~')
         line = ReadLine(stream);//пропускаем ~A
@@ -335,7 +337,7 @@ TResult TLas::ReadAscii(std::ifstream &stream, TString &line)
         return ReadAsciiNoWrap(stream, line);
 }
 
-TResult TLas::ReadAsciiWrap(std::ifstream &stream, TString &line)
+TResult TLas::ReadAsciiWrap(TStream& stream, TString &line)
 {
     TParser pars(line.data());
     size_t i = 0;
@@ -369,7 +371,7 @@ TResult TLas::ReadAsciiWrap(std::ifstream &stream, TString &line)
     return TResult();
 }
 
-TResult TLas::ReadAsciiNoWrap(std::ifstream &stream, TString &line)
+TResult TLas::ReadAsciiNoWrap(TStream& stream, TString &line)
 {
     TParser pars(line.data());
 
@@ -570,22 +572,22 @@ void TDataLas::SetUnit(const TString &value)
     unit  = value;
 }
 
-double TDataLas::Key(int index) const
+double TDataLas::Key(size_t index) const
 {
     return depth->at(index);
 }
 
-void TDataLas::SetKey(int index, double value)
+size_t TDataLas::SetKey(size_t index, double value, bool isSort)
 {
-    TDataBase::SetKey(index, value);
+    return TDataBase::SetKey(index, value, isSort);
 }
 
-double TDataLas::Value(int index, int array) const
+double TDataLas::Value(size_t index, int array) const
 {
     return values[index];
 }
 
-void TDataLas::SetValue(int index, double value, int array)
+void TDataLas::SetValue(size_t index, double value, int array)
 {
     values[index] = value;
 }

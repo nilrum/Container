@@ -8,39 +8,33 @@ using namespace testing;
 #include "DataContainer.h"
 #include "LasContainer.h"
 
-enum class TTypeErrors{Ok, Err1, Err2};
-REGISTER_CODES(TTypeErrors, Ok, "No errors")
-REGISTER_CODES(TTypeErrors, Err1, "Text for Err1")
 
-TEST(Result, Init)
+TEST(TBaseContainer, Init)
 {
-    TResult r;
-    EXPECT_TRUE(r.IsNoError());
-    EXPECT_TRUE(r.Is(0));
-
-    TResult r2(TTypeErrors::Ok);
-    EXPECT_TRUE(r2.IsNoError());
-    EXPECT_FALSE(r2.Is(0));
-    EXPECT_TRUE(r2.Is(TTypeErrors::Ok));
-
-    TResult r3(TTypeErrors::Err1);
-    EXPECT_FALSE(r3.IsNoError());
-    EXPECT_FALSE(r3.Is(0));
-    EXPECT_TRUE(r3.Is(TTypeErrors::Err1));
-
-    EXPECT_EQ(TResult::TextError(r3), "Text for Err1");
-
-    TResult i(3);
-    EXPECT_EQ(i.Code(), 3);
-    EXPECT_FALSE(i.IsNoError());
+    TBaseContainer cont;
+    EXPECT_EQ(cont.FullName(), TString());
+    EXPECT_TRUE(cont.Parent().expired());
+    EXPECT_EQ(cont.CountChildData(), 0);
 }
+
+TEST(TBaseContainer, Childs)
+{
+    TPtrBaseContainer cont = std::make_shared<TBaseContainer>();
+    cont->SetName("Root");
+    EXPECT_EQ(cont.FullName(), TString("Root"));
+    EXPECT_TRUE(cont.Parent().expired());
+    EXPECT_EQ(cont.CountChildData(), 0);
+
+
+}
+
 
 TEST(DataContainer, Init)
 {
     TContainer cont;
     EXPECT_FALSE(cont.IsValid());
     EXPECT_FALSE(cont.Header());
-    EXPECT_EQ(cont.CountData(), 0);
+    EXPECT_EQ(cont.CountChildData(), 0);
 }
 
 TEST(DataContainer, RegisterHeader)
@@ -120,10 +114,10 @@ TEST(TLasHeader, LoadFile1)
     EXPECT_EQ(loadable.size(), 8);
     EXPECT_EQ(cont.Header()->DepthUnit(), duFoot);
     EXPECT_TRUE(cont.LoadData(TVecData(loadable.begin() + 2, loadable.end() - 1)).IsNoError());
-    EXPECT_EQ(cont.CountData(), 5);
+    EXPECT_EQ(cont.CountChildData(), 5);
 
 
-    TPtrData data0 = cont.Data(0);
+    TPtrData data0 = cont.ChildData(0);
     EXPECT_EQ(data0->Name(), "8 5/8 Casing_Th");
 
     EXPECT_EQ(data0->FirstKey(), -14.59);
@@ -135,7 +129,7 @@ TEST(TLasHeader, LoadFile1)
     EXPECT_EQ(data0->LastKey(), 5281.21);
     EXPECT_EQ(data0->LastValue(), 0.398);
 
-    TPtrData data4 = cont.Data(4);
+    TPtrData data4 = cont.ChildData(4);
     EXPECT_EQ(data4->Name(), "8 5/8 Casing_ML");
 
     EXPECT_EQ(data4->FirstKey(), -14.59);
@@ -157,10 +151,10 @@ TEST(TLasHeader, LoadFile2)
     EXPECT_EQ(loadable.size(), 15);
     EXPECT_EQ(cont.Header()->DepthUnit(), duMeter);
     EXPECT_TRUE(cont.LoadData(TVecData(loadable.begin() + 2, loadable.end() - 5)).IsNoError());
-    EXPECT_EQ(cont.CountData(), 8);
+    EXPECT_EQ(cont.CountChildData(), 8);
 
 
-    TPtrData data0 = cont.Data(0);
+    TPtrData data0 = cont.ChildData(0);
     EXPECT_EQ(data0->Name(), "GRC");
 
     EXPECT_EQ(data0->FirstKey(), 6700.77);
@@ -172,7 +166,7 @@ TEST(TLasHeader, LoadFile2)
     EXPECT_EQ(data0->LastKey(), -0.42);
     EXPECT_EQ(data0->LastValue(), 4.);
 
-    TPtrData data7 = cont.Data(7);
+    TPtrData data7 = cont.ChildData(7);
     EXPECT_EQ(data7->Name(), "ZS10");
 
     EXPECT_EQ(data7->FirstKey(), 6700.77);

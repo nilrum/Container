@@ -11,12 +11,12 @@
 
 class THeaderBin : public THeaderBase{
 public:
-    THeaderBin(std::function<TPtrBinFile()> fun):createFile(fun){}
-    virtual TString Version() const override;
+    THeaderBin(std::function<TPtrBinFile()> fun):createFile(std::move(fun)){}
+    TString Version() const override;
 
-    virtual TResult CheckFile(const TString& path) override;
-    virtual TVecData LoadableData(const TString& path) override; //получаем список кривых которые доступны для загрузки из файла
-    virtual TResult LoadData(const TVecData& datas) override;       //загружаем список кривых
+    TResult CheckFile(const TString& path) override;
+    TVecData LoadableData(const TString& path) override; //получаем список кривых которые доступны для загрузки из файла
+    TResult LoadData(const TVecData& datas) override;       //загружаем список кривых
 
 protected:
     std::function<TPtrBinFile()> createFile;
@@ -49,32 +49,32 @@ public:
             unit(u), offset(ov), offsetKey(ok), file(f)
     { name = n; }
 
-    virtual TString Unit() const override
+    TString Unit() const override
     {
         return unit;
     }
 
-    virtual void SetUnit(const TString &value) override
+    void SetUnit(const TString &value) override
     {
         unit = value;
     }
 
-    virtual double Key(int index) const override
+    double Key(size_t index) const override
     {
         return KeyImpl(index);
     }
 
-    virtual double Value(int index, int array = 0) const override
+    double Value(size_t index, int array) const override
     {
         return ValImpl(index, array);
     }
 
-    virtual void SetValue(int index, double value, int array = 0) override
+    void SetValue(size_t index, double value, int array) override
     {
         *(ValImpl(index) + array) = TValue((value - TDataBinProp::coefB) / TDataBinProp::coefA);
     }
 
-    virtual size_t CountValue() const override
+    size_t CountValue() const override
     {
         return file->CountData();
     }
@@ -90,14 +90,10 @@ public:
         return this;
     }
 
-    virtual double KeyDelta() const
-    { return keyDelta; }
+    double KeyDelta() const override { return keyDelta; }
+    void SetKeyDelta(double value) override { keyDelta = value; }
 
-    virtual void SetKeyDelta(double value)
-    { keyDelta = value; }
-
-    virtual TVecDouble Coefs() const override
-    { return {coefB, coefA}; }
+    TVecDouble Coefs() const override { return {coefB, coefA}; }
 
     void SetCatAndInd(int cat, int ind)
     {
@@ -105,7 +101,7 @@ public:
         indUnit = ind;
     }
 
-    virtual double CalcLinValue(int index, int array, int first, int last, const TVecUInt &indx) override
+    double CalcLinValue(size_t index, int array, int first, int last, const TVecUInt &indx) override
     {
         if(index == first)
             return ValImpl(indx[index + 1], array);
@@ -154,7 +150,7 @@ public:
     TDataBinNull(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f) :
             TDataBin<TValue, TKey>(n, u, ov, ok, f){}
 
-    virtual double Value(int index, int array = 0) const override
+    double Value(size_t index, int array) const override
     {
         if(TChecker::IsNull(this->file->PtrData(index)))
             return NAN;
@@ -179,18 +175,18 @@ public:
             coef[i] = { off, std::get<1>(arrayCoef[i])};
         }
     }
-    virtual double Value(int index, int array = 0) const override
+    double Value(size_t index, int array) const override
     {
         if(index != cashIndex) CalcCash(index);
         return cashValue[array];
     }
 
-    virtual void SetValue(int index, double value, int array = 0) override
+    void SetValue(size_t index, double value, int array) override
     {
 
     }
 
-    virtual size_t CountArray() const override { return N; }
+    size_t CountArray() const override { return N; }
 
 protected:
     mutable int cashIndex = -1;
@@ -231,7 +227,7 @@ public:
             coef[i] = coef.back() / coef[i];
 
     }
-    virtual double Value(int index, int array = 0) const override
+    double Value(size_t index, int array) const override
     {
         if(index != cashIndex)
         {
@@ -241,7 +237,7 @@ public:
         return cashValue[array];
     }
 
-    virtual size_t CountArray() const override { return N; }
+    size_t CountArray() const override { return N; }
 protected:
     mutable int cashIndex = -1;
     mutable double cashValue[N];
@@ -270,7 +266,7 @@ struct TDataBinMarkNull : public TDataBinMark<TValue, TKey, N>, public TChecker{
 public:
     TDataBinMarkNull(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
             TDataBinMark<TValue, TKey, N>(n, u, ov, ok, f, arrayCoef){};
-    virtual double Value(int index, int array = 0) const override
+    double Value(size_t index, int array) const override
     {
         if(TChecker::IsNull(this->file->PtrData(index)))
             return NAN;
@@ -291,7 +287,7 @@ public:
         return ptr[array];
     }
 
-    virtual double CalcLinValue(int index, int array, int first, int last, const TVecUInt &indx) override
+    double CalcLinValue(size_t index, int array, int first, int last, const TVecUInt &indx) override
     {
         if(index == first)
         {
@@ -367,8 +363,8 @@ TString Cp1251ToUt8(const TString& val);
     class TYPE_HEADER : public BASE_HEADER{\
     public:\
         TYPE_HEADER():BASE_HEADER([](){ return std::make_shared<FORMAT>(); }){};\
-        virtual TPtrHeader Clone() override { return std::make_shared<TYPE_HEADER>(); };\
-        virtual TVariable Info(int index) const override\
+        TPtrHeader Clone() override { return std::make_shared<TYPE_HEADER>(); };\
+        TVariable Info(size_t  index) const override\
         {\
             if(file.get() == nullptr) return TVariable();\
             const FORMAT::THeaderType& h = *((FORMAT::THeaderType*)(file->PtrHeader()));\
@@ -377,7 +373,7 @@ TString Cp1251ToUt8(const TString& val);
                 default: return TString();\
             }\
         }\
-        virtual void SetInfo(int index, const TVariable& value) override\
+        void SetInfo(size_t  index, const TVariable& value) override\
         {\
             if(file.get() == nullptr) return;\
             FORMAT::THeaderType& h = *((FORMAT::THeaderType*)file->PtrHeader());\
@@ -385,7 +381,7 @@ TString Cp1251ToUt8(const TString& val);
                 SET_INFO\
                 }\
         }\
-        virtual TVecData LoadableData(const TString& path) override\
+        TVecData LoadableData(const TString& path) override\
         {\
             file = createFile();\
             if (file->LoadFile(path).IsError()) return TVecData();\

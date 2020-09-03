@@ -57,7 +57,9 @@ protected:
     TVecVecDouble lasCurves;
     int64_t offsetAsciiData = 0;
 
-    using TReadSection = std::function<TResult(std::ifstream& stream, TString& line)>;
+    using TStream = std::ifstream;
+
+    using TReadSection = std::function<TResult(TStream& stream, TString& line)>;
     struct TReadInfo{
         bool isReaded = false;
         TString id;
@@ -71,17 +73,17 @@ protected:
     virtual void AddWellInfo(const TVecString& info);
     virtual void AddCurveInfo(const TVecString& info);
 
-    TString ReadLine(std::ifstream& stream);
+    TString ReadLine(TStream& stream);
     TResult ReadParam(const TString& line, TVecString& params, bool readVal);
 
-    TResult ReadVersion(std::ifstream& stream, TString& line);
-    TResult ReadWell(std::ifstream& stream, TString& line);
-    TResult ReadCurves(std::ifstream& stream, TString& line);
-    TResult ReadParams(std::ifstream& stream, TString& line);
-    TResult ReadOther(std::ifstream& stream, TString& line);
-    TResult ReadAscii(std::ifstream& stream, TString& line);
-    TResult ReadAsciiWrap(std::ifstream& stream, TString& line);
-    TResult ReadAsciiNoWrap(std::ifstream& stream, TString& line);
+    TResult ReadVersion(TStream& stream, TString& line);
+    TResult ReadWell(TStream& stream, TString& line);
+    TResult ReadCurves(TStream& stream, TString& line);
+    TResult ReadParams(TStream& stream, TString& line);
+    TResult ReadOther(TStream& stream, TString& line);
+    TResult ReadAscii(TStream& stream, TString& line);
+    TResult ReadAsciiWrap(TStream& stream, TString& line);
+    TResult ReadAsciiNoWrap(TStream& stream, TString& line);
 };
 
 using TPtrDepthVector = std::shared_ptr<TVecDouble>;
@@ -89,20 +91,20 @@ using TPtrDepthVector = std::shared_ptr<TVecDouble>;
 class THeaderLas : public THeaderBase, public TLas {
 public:
     THeaderLas();
-    virtual TPtrHeader Clone();
-    virtual TString Version() const override;
+    TPtrHeader Clone() override;
+    TString Version() const override;
 
-    virtual TResult CheckFile(const TString &path) override;
-    virtual TVecData LoadableData(const TString &path) override; //получаем список кривых которые доступны для загрузки из файла
-    virtual TResult LoadData(const TVecData &datas) override;     //загружаем список кривых
+    TResult CheckFile(const TString &path) override;
+    TVecData LoadableData(const TString &path) override; //получаем список кривых которые доступны для загрузки из файла
+    TResult LoadData(const TVecData &datas) override;     //загружаем список кривых
 
-    virtual TString TitleInfo(int index) const;
-    void SetTitleInfo(int index, const TString& value);
-    virtual TVariable Info(int index) const;
-    virtual void SetInfo(int index, const TVariable& value);
-    virtual size_t CountInfo() const;
+    TString TitleInfo(size_t  index) const override;
+    void SetTitleInfo(size_t  index, const TString& value);
+    TVariable Info(size_t  index) const override;
+    void SetInfo(size_t  index, const TVariable& value) override;
+    size_t CountInfo() const override;
 
-    virtual TDepthUnit DepthUnit() const { return depthUnit; }
+    TDepthUnit DepthUnit() const override { return depthUnit; }
 protected:
     TDepthUnit depthUnit = duNone;
     TVecString othTitle;
@@ -125,18 +127,18 @@ public:
     TDataLas() = default;
     TDataLas(const TString& nameCurve, const TString& unitCurve, const TString& com, const TPtrDepthVector& depthVector);
 
-    virtual TString Unit() const;
-    virtual void SetUnit(const TString& value);
+    TString Unit() const override;
+    void SetUnit(const TString& value) override;
 
-    virtual double Key(int index) const;
-    virtual void SetKey(int index, double value);
-    virtual double Value(int index, int array = 0) const;
-    virtual void SetValue(int index, double value, int array = 0);
-    virtual size_t CountValue() const;
+    double Key(size_t index) const override;
+    size_t SetKey(size_t index, double value, bool isSort) override;
+    double Value(size_t index, int array) const override;
+    void SetValue(size_t index, double value, int array) override;
+    size_t CountValue() const override;
 
-    virtual const double* PtrKey();
-    virtual const double* PtrValue(int array = 0);
-    virtual void SwapValue(TVecDouble& value);
+    const double* PtrKey() override;
+    const double* PtrValue(int array) override;
+    void SwapValue(TVecDouble& value) override;
 
     PROPERTIES(TDataLas, TDataBase,
         PROPERTY(TString, comment, Comment, SetComment);

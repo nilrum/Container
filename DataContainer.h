@@ -8,41 +8,118 @@
 #include "PropertyClass.h"
 #include "Units.h"
 
+class THeaderBase;
+using TPtrHeader = std::shared_ptr<THeaderBase>;
+
 class TDataBase;
 using TPtrData = std::shared_ptr<TDataBase>;
 using TVecData = std::vector<TPtrData>;
 
-class TUsedClass;
-using TPtrUsedClass = std::shared_ptr<TUsedClass>;
-using TWPtrUsedClass = std::weak_ptr<TUsedClass>;
-
 using TOnDataEdit = sigslot::signal<>;
+using TOnNameChanged = sigslot::signal<>;
 
-class TUsedClass : public TPropertyClass{
+class TBaseContainer;
+using TPtrBaseContainer = std::shared_ptr<TBaseContainer>;
+using TWPtrBaseContainer = std::weak_ptr<TBaseContainer>;
+using TVecBaseContainer = std::vector<TPtrBaseContainer>;
+using TFindPred = std::function<bool(const TPtrData&)>;
+
+class TBaseContainer : public TPropertyClass{
 public:
-    virtual TString FullName() const;
-    const TWPtrUsedClass& Parent() const;
-    void SetParent(const TPtrUsedClass& value);
+    TBaseContainer() = default;
+    TBaseContainer(const TBaseContainer& oth):parent(oth.parent), childData(oth.childData){}
+
+    TString FullName() const;   //полный путь к данном элементу
+
+    virtual const TPtrHeader& Header() const;
+
+    const TWPtrBaseContainer& Parent() const;
+    void SetParent(const TWPtrBaseContainer& value);
+
+    TPtrBaseContainer LockParent() const;
+
+    virtual size_t CountChildData() const;
+    virtual const TPtrData& ChildData(size_t index) const;
+
+    virtual const TPtrData& AddChildData(const TPtrData& value);
+    virtual void DelChildData(const TPtrData& value);
+
+    virtual TPtrData CreateChildData(int t) { return std::make_shared<TDataBase>(); }
+    inline TPtrData AddDefChildData(int t = 0) { return AddChildData(CreateChildData(t)); };
+
+    TPtrData FindData(const TString& pathData);
+    virtual TPtrData FindDataPath(const TVecString &path, int pos, bool isThis);
+    virtual TVecData FindDataPred(const TFindPred& pred);
 protected:
-    TWPtrUsedClass parent;
+    TWPtrBaseContainer parent;
+    TVecData childData;
+
     virtual void CallUsed(const TPtrData& value);
+
+    template<typename TCont>
+    TVecData FindDataPredThis(const TCont &cont, const TFindPred& pred)
+    {
+        TVecData res;
+        for(const auto& child : cont)
+        {
+            if (pred(child))
+                res.emplace_back(child);
+            FindDataPredChild(child, pred, res);
+        }
+        return res;
+    }
+
+    template<typename TChild>
+    void FindDataPredChild(const TChild &child, const TFindPred& pred, TVecData& res)
+    {
+        if(child->CountChildData() == 0) return;
+        TVecData childRes = child->FindDataPred(pred);
+        if(childRes.size())
+            res.insert(res.end(), childRes.begin(), childRes.end());
+    }
+    template<typename TCont>
+    TPtrData FindDataThis(const TVecString &path, int pos, const TCont &cont)
+    {
+        if(pos < path.size() && name == path[pos])
+            return FindDataChild(path, pos + 1, cont);
+        return TPtrData();
+    }
+    template<typename TCont>
+    TPtrData FindDataChild(const TVecString &path, int pos, const TCont &cont)
+    {
+        if(pos < path.size())
+            for(const auto& child : cont)
+            {
+                TPtrData res = child->FindDataPath(path, pos, true);
+                if(res) return res;
+            }
+        return std::dynamic_pointer_cast<TDataBase>(shared_from_this());
+    }
 };
 
-class TDataBase: public TUsedClass{
+class TDataBase: public TBaseContainer{
 public:
     virtual ~TDataBase() = default;
+
+    void SetName(const TString &value) override;
 
     virtual TString Unit() const{ return TString(); };
     virtual void SetUnit(const TString& value){};
 
-    virtual double Key(int index) const{ return 0; };
-    virtual void SetKey(int index, double value){};
-    virtual double Value(int index, int array = 0) const { return 0; };
-    virtual void SetValue(int index, double value, int array = 0){};
+    virtual void Set(TVecDouble* keys, TVecDouble* vals, int countArray, bool isSwap){};
+
+    virtual double Key(size_t index) const{ return 0; };
+    virtual size_t SetKey(size_t index, double value, bool isSort){ return index; };
+    virtual double Value(size_t index, int array) const { return 0; };
+    virtual void SetValue(size_t index, double value, int array){};
     virtual size_t CountValue() const { return 0; };
     virtual size_t CountArray() const { return 1; };
 
-    TString Title() const { return Name() + (Unit().size() ? ("," + Unit()) : TString()); }
+    inline size_t SetKey(size_t index, double value){ return SetKey(index, value, true); }
+    inline double Value(size_t index) const { return Value(index, 0); }
+    inline void SetValue(size_t index, double value){ SetValue(index, value, 0); };
+
+    TString Title() const { return Name() + (Unit().empty() ? TString() : ("," + Unit())); }
 
     inline double FirstKey() const { return Key(0); }
     inline double LastKey() const { return Key(CountValue() - 1); }
@@ -50,30 +127,28 @@ public:
     inline double FirstValue(int array = 0) const { return Value(0, array); }
     inline double LastValue(int array = 0) const { return Value(CountValue() - 1, array); }
 
-    virtual void Insert(size_t index, const TVecDouble& keyValues = TVecDouble()){};
-    virtual void Delete(size_t index, size_t count = 1){};
+    virtual void Insert(size_t index, const TVecDouble& keyValues, bool isSort){};
+    virtual void Delete(size_t index, size_t count){};
+
+    inline void Insert(size_t index, const TVecDouble& keyValues = TVecDouble()) { Insert(index, keyValues, true); }
+    inline void Delete(size_t index){ Delete(index, 1); };
+    inline void Add(const TVecDouble& keyValues, bool isSort = false) { Insert(CountValue(), keyValues, isSort); }
 
     virtual void Load(FILE* file) {};
     virtual void Save(FILE* file) {};
 
-    virtual size_t CountOther() const { return 0; };
-    virtual const TPtrData& Other(int index) const;
-    virtual const TPtrData& AddOther(const TPtrData& value){ return value; };
-    virtual void DelOther(const TPtrData& value){};
-    virtual TPtrData AddDefOther(){ return AddOther(std::make_shared<TDataBase>()); };
-
     virtual TVecString DefaultTitles() const{ return TVecString(); }
     virtual TVecString DefaultEnumTypes() const{ return TVecString(); }
 
-    TOnDataEdit Edited;
-
+    TOnDataEdit OnEdited;
+    TOnNameChanged OnNameChanged;
     //vector interface
     inline size_t size() const { return CountValue();};
     inline double at(int index) const { return Key(index); }
 
     //если есть возможность отдает указатель на данные напрямую
     virtual const double* PtrKey() { return nullptr; };
-    virtual const double* PtrValue(int array = 0){ return nullptr; };
+    virtual const double* PtrValue(int array){ return nullptr; };
     virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
 
     void Assign(const TPtrData& value);
@@ -103,7 +178,7 @@ public:
     virtual void SetIsUsed(bool value);
     void SetIsUsedNoCall(bool value);
 
-    virtual double CalcLinValue(int index, int array, int first, int last, const TVecUInt& indx){ return NAN; };
+    virtual double CalcLinValue(size_t index, int array, int first, int last, const TVecUInt& indx){ return NAN; };
 protected:
     int isUsed = false;
     int tag = 0;
@@ -111,10 +186,9 @@ protected:
     int indUnit = 0;
 };
 
-enum TIdInfo{iiArea = 0, iiWell, iiDate, iiTime, iiBegin, iiEnd, iiStep, iiCompany, iiServComp, iiCountInfo};
+int IndexForTag(const TPtrData& value, int tag);
 
-class THeaderBase;
-using TPtrHeader = std::shared_ptr<THeaderBase>;
+enum TIdInfo{iiArea = 0, iiWell, iiDate, iiTime, iiBegin, iiEnd, iiStep, iiCompany, iiServComp, iiCountInfo};
 
 class THeaderBase{
 public:
@@ -123,9 +197,9 @@ public:
     virtual TPtrHeader Clone() = 0;
     virtual TString Version() const = 0;
 
-    virtual TString TitleInfo(int index) const;
-    virtual TVariable Info(int index) const = 0;
-    virtual void SetInfo(int index, const TVariable& value){};
+    virtual TString TitleInfo(size_t index) const;
+    virtual TVariable Info(size_t  index) const = 0;
+    virtual void SetInfo(size_t  index, const TVariable& value){};
     virtual size_t CountInfo() const;
     virtual void CopyInfo(const TPtrHeader& src){};
 
@@ -138,23 +212,22 @@ public:
     static TVecString InitDefTitle();
     static const TVecString& DefTitle(){ static TVecString defTitle = InitDefTitle(); return defTitle; }
 };
+
 using TPtrRegHeader = std::unique_ptr<THeaderBase>;
 using TVecHeader = std::vector<TPtrRegHeader>;
 
 enum class TContainerResult{ Ok, InvHeader};
 
-class TContainer{
+class TContainer : public TBaseContainer{
 public:
     TContainer() = default;
     TContainer(const TPtrHeader& value);
+    TContainer(const TContainer& oth):TBaseContainer(oth), header(oth.header){}
 
     bool IsValid() const;
 
-    const TPtrHeader& Header() const;
+    const TPtrHeader& Header() const override;
     void SetHeader(const TPtrHeader& value);
-    const TPtrData& Data(int index);
-    const TPtrData& Data(int index) const;
-    size_t CountData() const;
 
     bool IsUp() const;
 
@@ -179,7 +252,6 @@ public:
     static TPtrHeader FindHeader(const TString& version);
 protected:
     TPtrHeader header;
-    TVecData data;
     static TVecHeader& Headers(){ static TVecHeader headers; return headers; }
 };
 
@@ -195,10 +267,10 @@ public:
     }
     virtual TResult Select()
     {//возвращаем список выбраных кривых
-        TVecData rez;
-        for(size_t i = 0; i < loadable.size(); i++)
-            if(loadable[i]->IsUsed()) rez.push_back(loadable[i]);
-        return cont->LoadData(rez);
+        TVecData res;
+        for(const auto& it : loadable)
+            if(it->IsUsed()) res.push_back(it);
+        return cont->LoadData(res);
     }
     TVecData& Loadable() { return loadable; }
 
@@ -218,7 +290,7 @@ public:
 
     bool IsSelected() const
     {//выбрана ли хоть одна кривая
-        for(auto v : loadable)
+        for(const auto& v : loadable)
             if(v->IsUsed()) return true;
         return false;
     }
@@ -241,8 +313,8 @@ template <bool>
 struct TRange{
     using TPredFirst = TDoubleCheck::TDoubleGreater;
     using TPredSecond= TDoubleCheck::TDoubleGreaterEq;
-    static double StartVal(double begin, double end){ return begin; }
-    static double StopVal(double begin, double end){ return end; }
+    static double StartVal(double begin, double){ return begin; }
+    static double StopVal(double, double end){ return end; }
     static const int Last = INT_MIN;
     static int RealInc() { return 1; }
 };
@@ -251,8 +323,8 @@ template <>
 struct TRange<true>{
     using TPredFirst = TDoubleCheck::TDoubleLess;
     using TPredSecond= TDoubleCheck::TDoubleLessEq;
-    static double StartVal(double begin, double end){ return end; }
-    static double StopVal(double begin, double end){ return begin; }
+    static double StartVal(double, double end){ return end; }
+    static double StopVal(double begin, double){ return begin; }
     static const int Last = INT_MAX;
     static int RealInc() { return -1; }
 };
@@ -313,6 +385,8 @@ TVecUInt FindTryIndex(bool isUp, T* ptr, double begin, double end, double convCo
     }
     return res;
 }
+
+TVecVecDouble NormData(double begin, double end, double step, const TVecVecDouble& data);
 
 
 #endif //TESTAPP_DATACONTAINER_H
