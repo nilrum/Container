@@ -78,7 +78,10 @@ void THeaderLas::AddWellInfo(const TVecString &info)
     TLas::AddWellInfo(info);
     int index = LasHeaderToInd(info[0]);//ищим по названию индекс для шапки
     SetTitleInfo(index, info[0]);
-    SetInfo(index, info[2]);
+    if(index != iiStep)
+        SetInfo(index, info[2]);
+    else
+        SetInfo(index, std::fabs(TVariable(info[2]).ToDouble()));
     if(index == iiBegin)//получаем ед измерения глубины
     {
         TString unit = ToLowerCase(info[1]);
@@ -381,12 +384,15 @@ TResult TLas::ReadAsciiNoWrap(TStream& stream, TString &line)
         {
             if(d.empty())
             {
-                if (pars.IgnoreNumber() == 0) return TResultLas::ErrCountReadData;
+                if (pars.IgnoreNumber() == 0)
+                    return TResultLas::ErrCountReadData;
             }
             else
             {
-                if (pars.IsNumber(d.back()) == false) return TResultLas::ErrCountReadData;//нехватило данных для считывания
-                if(d.back() == nullVal) d.back() = NAN;
+                if (pars.IsNumber(d.back()) == false)
+                    return TResultLas::ErrCountReadData;//нехватило данных для считывания
+                if(d.back() == nullVal)
+                    d.back() = NAN;
             }
         }
         line = ReadLine(stream);
@@ -470,7 +476,7 @@ bool TParser::IsSpace()
     const char* beg = text;
     while(*text)
     {
-        if(std::isspace(*text)) text++;
+        if(std::isspace((unsigned char)(*text))) text++;
         else break;
     }
     return text != beg;//был ли найден пробельный символ
@@ -577,9 +583,9 @@ double TDataLas::Key(size_t index) const
     return depth->at(index);
 }
 
-size_t TDataLas::SetKey(size_t index, double value, bool isSort)
+size_t TDataLas::SetKey(size_t index, double value, bool isSort, TTypeEdit typeEdit)
 {
-    return TDataBase::SetKey(index, value, isSort);
+    return TDataBase::SetKey(index, value, isSort, typeEdit);
 }
 
 double TDataLas::Value(size_t index, int array) const

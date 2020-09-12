@@ -15,7 +15,12 @@ class TDataBase;
 using TPtrData = std::shared_ptr<TDataBase>;
 using TVecData = std::vector<TPtrData>;
 
-using TOnDataEdit = sigslot::signal<>;
+enum class TTypeEdit{NoUpdate, UpdateValues, UpdateViews, FullUpdate};
+
+constexpr bool IsEditValues(TTypeEdit value) { return value == TTypeEdit::UpdateValues || value == TTypeEdit::FullUpdate; }
+constexpr bool IsEditViews(TTypeEdit value) { return value == TTypeEdit::UpdateViews || value == TTypeEdit::FullUpdate; }
+
+using TOnDataEdit = sigslot::signal<TTypeEdit>;
 using TOnNameChanged = sigslot::signal<>;
 
 class TBaseContainer;
@@ -40,6 +45,7 @@ public:
 
     virtual size_t CountChildData() const;
     virtual const TPtrData& ChildData(size_t index) const;
+    virtual TPtrBaseContainer ChildContainer(size_t index) const;
 
     virtual const TPtrData& AddChildData(const TPtrData& value);
     virtual void DelChildData(const TPtrData& value);
@@ -48,7 +54,7 @@ public:
     inline TPtrData AddDefChildData(int t = 0) { return AddChildData(CreateChildData(t)); };
 
     TPtrData FindData(const TString& pathData);
-    virtual TPtrData FindDataPath(const TVecString &path, int pos, bool isThis);
+    virtual TPtrData FindDataPath(const TVecString &path, size_t pos, bool isThis);
     virtual TVecData FindDataPred(const TFindPred& pred);
 protected:
     TWPtrBaseContainer parent;
@@ -78,14 +84,14 @@ protected:
             res.insert(res.end(), childRes.begin(), childRes.end());
     }
     template<typename TCont>
-    TPtrData FindDataThis(const TVecString &path, int pos, const TCont &cont)
+    TPtrData FindDataThis(const TVecString &path, size_t pos, const TCont &cont)
     {
         if(pos < path.size() && name == path[pos])
             return FindDataChild(path, pos + 1, cont);
         return TPtrData();
     }
     template<typename TCont>
-    TPtrData FindDataChild(const TVecString &path, int pos, const TCont &cont)
+    TPtrData FindDataChild(const TVecString &path, size_t pos, const TCont &cont)
     {
         if(pos < path.size())
             for(const auto& child : cont)
@@ -106,16 +112,16 @@ public:
     virtual TString Unit() const{ return TString(); };
     virtual void SetUnit(const TString& value){};
 
-    virtual void Set(TVecDouble* keys, TVecDouble* vals, int countArray, bool isSwap){};
+    virtual void Set(TVecDouble* keys, TVecDouble* vals, int countArray, bool isSwap, TTypeEdit typeEdit){};
 
     virtual double Key(size_t index) const{ return 0; };
-    virtual size_t SetKey(size_t index, double value, bool isSort){ return index; };
+    virtual size_t SetKey(size_t index, double value, bool isSort, TTypeEdit typeEdit){ return index; };
     virtual double Value(size_t index, int array) const { return 0; };
     virtual void SetValue(size_t index, double value, int array){};
     virtual size_t CountValue() const { return 0; };
     virtual size_t CountArray() const { return 1; };
 
-    inline size_t SetKey(size_t index, double value){ return SetKey(index, value, true); }
+    inline size_t SetKey(size_t index, double value){ return SetKey(index, value, true, TTypeEdit::FullUpdate); }
     inline double Value(size_t index) const { return Value(index, 0); }
     inline void SetValue(size_t index, double value){ SetValue(index, value, 0); };
 
@@ -150,6 +156,9 @@ public:
     virtual const double* PtrKey() { return nullptr; };
     virtual const double* PtrValue(int array){ return nullptr; };
     virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
+
+
+    virtual void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit){};
 
     void Assign(const TPtrData& value);
 
@@ -259,7 +268,9 @@ using TPtrContainer = std::shared_ptr<TContainer>;
 
 class TSelectLoader{
 public:
-    virtual void SetContainer(TContainer* value, const TString& path)
+    virtual ~TSelectLoader(){}
+
+    virtual void SetContainer(const TPtrContainer& value, const TString& path)
     {
         cont = value;
         loadable = cont->Header()->LoadableData(path);
@@ -274,10 +285,11 @@ public:
     }
     TVecData& Loadable() { return loadable; }
 
+    inline TPtrContainer Cont() const { return cont; }
     TDepthUnit FromConvert() const { return fromConvert; }
-    virtual double Step() const { return NAN; };
-    virtual double Begin() const{ return NAN; };
-    virtual double End() const { return NAN; };
+    inline double Step() const { return step; };
+    inline double Begin() const{ return begin; };
+    inline double End() const { return end; };
 
 
     TVecBool EditableVector()
@@ -302,9 +314,12 @@ public:
     }
 
 protected:
-    TContainer* cont = nullptr;//TODO подумать над этим
+    TPtrContainer cont;
     TVecData loadable;
     TDepthUnit fromConvert = duNone; //из чего конвертировать
+    double begin = NAN;
+    double end = NAN;
+    double step = NAN;
 };
 
 using TPtrLoader = std::shared_ptr<TSelectLoader>;

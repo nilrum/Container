@@ -251,7 +251,7 @@ protected:
         {
             if(ptrSpad[i] == -32768)//если дошли до маркера меняем коэффициент
             {
-                if(indKus < coef.size())
+                if(indKus < coef.size() - 1)
                     indKus++;
                 continue;
             }

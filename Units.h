@@ -44,6 +44,7 @@ public:
         PROPERTY(TPressUnit, press, Press, SetPress);
         PROPERTY(TWidthUnit, diameter, Diameter, SetDiameter);
         PROPERTY(TWidthUnit, thickness, Thickness, SetThickness);
+        PROPERTY(double, defaultStep, DefaultStep, SetDefaultStep);
     );
 
     PROPERTY_FUN(TDepthUnit, depth, Depth, SetDepth);
@@ -55,6 +56,7 @@ public:
     PROPERTY_FUN(TPressUnit, press, Press, SetPress);
     PROPERTY_FUN(TWidthUnit, diameter, Diameter, SetDiameter);
     PROPERTY_FUN(TWidthUnit, thickness, Thickness, SetThickness);
+    PROPERTY_FUN(double, defaultStep, DefaultStep, SetDefaultStep);
 private:
     TDepthUnit depth = TDepthUnit::duMeter;
     TSpeedUnit speed = TSpeedUnit::suInHour;
@@ -65,6 +67,8 @@ private:
     TPressUnit press = TPressUnit::puAtm;
     TWidthUnit diameter = TWidthUnit::wuMM;
     TWidthUnit thickness = TWidthUnit::wuMM;
+
+    double defaultStep = 0.02;
 };
 
 using TPtrUnitProfile = std::shared_ptr<TUnitProfile>;

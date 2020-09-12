@@ -223,6 +223,12 @@ const TPtrData &TBaseContainer::ChildData(size_t index) const
     return Single<TPtrData>();
 }
 
+TPtrBaseContainer TBaseContainer::ChildContainer(size_t index) const
+{
+    return ChildData(index);
+}
+
+
 const TPtrData &TBaseContainer::AddChildData(const TPtrData &value)
 {
     childData.emplace_back(value);
@@ -251,7 +257,7 @@ TPtrData TBaseContainer::FindData(const TString &pathData)
     return FindDataPath(Split(pathData, '/'), 0, true);
 }
 
-TPtrData TBaseContainer::FindDataPath(const TVecString &path, int pos, bool isThis)
+TPtrData TBaseContainer::FindDataPath(const TVecString &path, size_t pos, bool isThis)
 {
     if(isThis)
         return FindDataThis(path, pos, childData);
