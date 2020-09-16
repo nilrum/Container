@@ -21,9 +21,9 @@ TEST(TBaseContainer, Childs)
 {
     TPtrBaseContainer cont = std::make_shared<TBaseContainer>();
     cont->SetName("Root");
-    EXPECT_EQ(cont.FullName(), TString("Root"));
-    EXPECT_TRUE(cont.Parent().expired());
-    EXPECT_EQ(cont.CountChildData(), 0);
+    EXPECT_EQ(cont->FullName(), TString("Root"));
+    EXPECT_TRUE(cont->Parent().expired());
+    EXPECT_EQ(cont->CountChildData(), 0);
 
 
 }

@@ -4,6 +4,7 @@
 
 #include "LasContainer.h"
 #include <fstream>
+#include <cstring>
 
 INIT_PROPERTYS(TDataLas)
 
@@ -263,12 +264,23 @@ int64_t TLas::TStream::tellg()
 {
     fpos_t pos;
     std::fgetpos(file.get(), &pos);
+#ifdef _WIN32
     return int64_t(pos);
+#else
+    int64_t res;
+    memcpy(&res, &pos, sizeof(int64_t));
+    return res;
+#endif
 }
 
 void TLas::TStream::seekg(int64_t value)
 {
-    fpos_t pos(value);
+#ifdef _WIN32
+    fpos_t pos = fpos_t(value);
+#else
+    fpos_t pos;
+    memcpy(&pos, &value, sizeof(int64_t));
+#endif
     std::fsetpos(file.get(), &pos);
 }
 
