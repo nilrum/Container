@@ -250,6 +250,7 @@ public:
     void SetInfoDouble(int index, double value);
 
     static TPtrHeader HeaderFromFile(const TString& path);  //ишет шапку по файлу
+    static TResult HeaderFromFile(const TString& path, TPtrHeader& hdr);
     static TContainer CreateFromFile(const TString& path);      //создает контейнер по файлу
     static TContainer LoadFromFile(const TString& path);        //создает и загружает контейнер по файлу
     static TContainer CreateFromVersion(const TString& value);//создает контейнер по версии шапки(если такая версия есть)

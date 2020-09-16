@@ -57,7 +57,19 @@ protected:
     TVecVecDouble lasCurves;
     int64_t offsetAsciiData = 0;
 
-    using TStream = std::ifstream;
+    //using TStream = std::ifstream;
+
+    struct TStream{
+        std::shared_ptr<FILE> file;
+        int c = 0;
+        TStream(const TString& path);
+        int read_line(TString& value);
+        int64_t tellg();
+        void seekg(int64_t value);
+
+        bool is_open() const { return file != nullptr; }
+        bool eof() const { return c == EOF; }
+    };
 
     using TReadSection = std::function<TResult(TStream& stream, TString& line)>;
     struct TReadInfo{

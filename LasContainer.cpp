@@ -5,12 +5,20 @@
 #include "LasContainer.h"
 #include <fstream>
 
-
 INIT_PROPERTYS(TDataLas)
 
 namespace {
     const bool addHeader = TContainer::RegisterHeader(std::make_unique<THeaderLas>());
 }
+
+REGISTER_CODES(TResultLas,
+               TEXT_CODE(FileNotOpen, "Error opening file");
+               TEXT_CODE(EmptyFile, "File is empty");
+               TEXT_CODE(LasSecNotFound, "Las section not found");
+               TEXT_CODE(NotSupportVersion, "Error version file");
+               TEXT_CODE(BadSintax, "Error las sintax");
+               TEXT_CODE(ErrCountReadData, "Error count read data");
+)
 
 THeaderLas::THeaderLas()
 {
@@ -181,14 +189,13 @@ void TLas::Clear()
     lasCurves.clear();
     offsetAsciiData = 0;
 }
-
+#include <filesystem>
 TResult TLas::Read(const TString &path, bool andValues)
 {
     Clear();
-    //std::wstring p(L"D:/Work/DataLog/MID_Soft/Тест/TC-9N_WBD_Thickness.las");
-    TStream stream(path, std::ifstream::binary);
+    //TStream stream(path.c_str(), std::ifstream::binary);
+    TStream stream(path);
     if(stream.is_open() == false) return TResultLas::FileNotOpen;
-
 
     TString line = ReadLine(stream);
     if(line.empty()) return TResultLas::EmptyFile;
@@ -228,12 +235,50 @@ TResult TLas::ReadData(const TString& path)
     return ReadAscii(stream, line);
 }
 
+TLas::TStream::TStream(const TString &path):file(OpenFile(path))
+{
+
+}
+
+int TLas::TStream::read_line(TString &value)
+{
+    value.clear();
+    c = std::fgetc(file.get());
+    while(c != EOF)
+    {
+        if(c == '\n' || c == '\r')//если символ конца строки
+        {
+            if(value.empty() == false)
+                break;
+        }
+        else
+            value.push_back(c);
+
+        c = std::fgetc(file.get());
+    }
+    return c;
+}
+
+int64_t TLas::TStream::tellg()
+{
+    fpos_t pos;
+    std::fgetpos(file.get(), &pos);
+    return int64_t(pos);
+}
+
+void TLas::TStream::seekg(int64_t value)
+{
+    fpos_t pos(value);
+    std::fsetpos(file.get(), &pos);
+}
+
 TString TLas::ReadLine(TStream& stream)
 {
     TString res;
     while(stream.eof() == false)
     {
-        std::getline(stream, res);
+        //std::getline(stream, res);
+        stream.read_line(res);
         if(res.empty() == false && res[0] != '#') return res;
     }
     return res;
@@ -618,5 +663,4 @@ void TDataLas::SwapValue(TVecDouble &value)
 {
     values.swap(value);
 }
-
 

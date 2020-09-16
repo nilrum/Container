@@ -47,8 +47,23 @@ TResult TContainer::LoadData(const TVecData &value)
 TPtrHeader TContainer::HeaderFromFile(const TString& path)
 {
     for(const TPtrRegHeader& h : Headers())
-        if (h->CheckFile(path).IsNoError()) return h->Clone();//TODO нужно возвращать результат открытия
+        if (h->CheckFile(path).IsNoError()) return h->Clone();
     return TPtrHeader();
+}
+
+TResult TContainer::HeaderFromFile(const TString &path, TPtrHeader &hdr)
+{
+    TResult res;
+    for(const TPtrRegHeader& h : Headers())
+    {
+        res = h->CheckFile(path);
+        if (res.IsNoError())
+        {
+            hdr = h->Clone();
+            break;
+        }
+    }
+    return res;
 }
 
 TContainer TContainer::CreateFromFile(const TString &path)

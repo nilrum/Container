@@ -3,3 +3,8 @@
 //
 
 #include "BinFile.h"
+
+REGISTER_CODES(TBinFileResult,
+    TEXT_CODE(ErrOpen, "Error opening file");
+    TEXT_CODE(ErrVersion, "Error version file");
+)

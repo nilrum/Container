@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <memory>
 #include <cstring>
+
 enum class TBinFileResult{ Ok, ErrOpen, ErrVersion };
 
 class TBinFile{
@@ -91,11 +92,6 @@ protected:
     TString version;
     THeader header;
     std::vector<TData> data;
-
-    std::shared_ptr<FILE> OpenFile(const TString& path)
-    {
-        return std::shared_ptr<FILE>(std::fopen(path.c_str(), "rb"), [](FILE* file){ if(file != nullptr) std::fclose(file); });
-    }
 
     virtual bool CheckHeader(const THeader& h)
     {
