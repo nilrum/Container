@@ -10,7 +10,7 @@ foreach(F ${CONTAINER_FILES})
 endforeach()
 
 #Add test files
-set(CONTAINER_TESTS DataContainerTest.cpp)
+set(CONTAINER_TESTS DataContainerTest.cpp MID4ContainerTest.cpp)
 
 #Target
 if(NOT TARGET ContainerTest)
