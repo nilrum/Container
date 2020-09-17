@@ -8,6 +8,8 @@
 #include "PropertyClass.h"
 #include "Units.h"
 
+#include <climits>
+
 class THeaderBase;
 using TPtrHeader = std::shared_ptr<THeaderBase>;
 
