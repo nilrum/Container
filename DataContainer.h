@@ -37,6 +37,7 @@ public:
     TBaseContainer(const TBaseContainer& oth):parent(oth.parent), childData(oth.childData){}
 
     TString FullName() const;   //полный путь к данном элементу
+    void SetName(const TString &value) override;
 
     virtual const TPtrHeader& Header() const;
 
@@ -58,6 +59,8 @@ public:
     TPtrData FindData(const TString& pathData);
     virtual TPtrData FindDataPath(const TVecString &path, size_t pos, bool isThis);
     virtual TVecData FindDataPred(const TFindPred& pred);
+
+    TOnNameChanged OnNameChanged;
 protected:
     TWPtrBaseContainer parent;
     TVecData childData;
@@ -109,8 +112,6 @@ class TDataBase: public TBaseContainer{
 public:
     virtual ~TDataBase() = default;
 
-    void SetName(const TString &value) override;
-
     virtual TString Unit() const{ return TString(); };
     virtual void SetUnit(const TString& value){};
 
@@ -149,7 +150,7 @@ public:
     virtual TVecString DefaultEnumTypes() const{ return TVecString(); }
 
     TOnDataEdit OnEdited;
-    TOnNameChanged OnNameChanged;
+
     //vector interface
     inline size_t size() const { return CountValue();};
     inline double at(int index) const { return Key(index); }
@@ -173,7 +174,7 @@ public:
         PROPERTY(TEnum, indUnit, IndUnit, SetIndUnitEn).NoSerialization();
     )
     PROPERTY_FUN(int, tag, Tag, SetTag);
-    PROPERTY_FUN(TUnitCategory, category, Category, SetCategory);
+    PROPERTY_FUN_CHG(TUnitCategory, category, Category, SetCategory);
 
     TEnum IndUnit() const;
     void SetIndUnitEn(const TEnum& value);
@@ -246,10 +247,10 @@ public:
     virtual TResult LoadData(const TVecData& value);
 
     TString Info(int index) const;
-    void SetInfo(int index, const TString& value);
+    virtual void SetInfo(int index, const TString& value);
 
     double InfoDouble(int index) const;
-    void SetInfoDouble(int index, double value);
+    virtual void SetInfoDouble(int index, double value);
 
     static TPtrHeader HeaderFromFile(const TString& path);  //ишет шапку по файлу
     static TResult HeaderFromFile(const TString& path, TPtrHeader& hdr);

@@ -201,19 +201,19 @@ void TDataBase::SetIndUnit(int value)
     indUnit = value;
 }
 
-void TDataBase::SetName(const TString &value)
-{
-    bool chg = name != value;
-    TPropertyClass::SetName(value);
-    if(chg) OnNameChanged();
-}
-
 //---------------------------------------------------------------------------------------------------------------
 TString TBaseContainer::FullName() const
 {
     TPtrBaseContainer p = parent.lock();
     if(p != nullptr) return p->FullName() + "/" + Name();
     else return Name();
+}
+
+void TBaseContainer::SetName(const TString &value)
+{
+    bool chg = name != value;
+    TPropertyClass::SetName(value);
+    if(chg) OnNameChanged();
 }
 
 const TWPtrBaseContainer &TBaseContainer::Parent() const

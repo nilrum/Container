@@ -90,6 +90,7 @@ private:
 };
 
 using TPtrUnitCustoms = std::shared_ptr<TUnitCustoms>;
+using TMapCategory =  std::map<TUnitCategory, int>;
 
 class TUnits : public TUnitProfile{
 public:
@@ -97,7 +98,7 @@ public:
     ~TUnits();
 
     void SetNone();//устанавливает не выбранные значения
-    void SetDefault(const std::map<TUnitCategory, int>& set);//применяет настройки по умолчанию или переданное значение
+    void SetDefault(const TMapCategory& set);//применяет настройки по умолчанию или переданное значение
 
     STATIC_ARG(TUnits*, Single, nullptr);                                 //текущие ед измерения
     STATIC_ARG(TPtrUnitCustoms, Customs, std::make_shared<TUnitCustoms>());//настройки по умолчанию для ед измерения

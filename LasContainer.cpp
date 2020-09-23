@@ -190,7 +190,7 @@ void TLas::Clear()
     lasCurves.clear();
     offsetAsciiData = 0;
 }
-#include <filesystem>
+
 TResult TLas::Read(const TString &path, bool andValues)
 {
     Clear();

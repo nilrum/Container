@@ -32,7 +32,7 @@ void TUnits::SetNone()
         WriteProperty(i, 0);
 }
 
-void TUnits::SetDefault(const std::map<TUnitCategory, int>& set)
+void TUnits::SetDefault(const TMapCategory& set)
 {//делаем значения не выбранными по умолчанию
     const TPtrUnitProfile& def = Customs()->CurProfile();
     int count = TEnum(ucDepth).Names().size();
