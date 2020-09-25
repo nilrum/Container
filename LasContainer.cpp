@@ -650,7 +650,7 @@ double TDataLas::Value(size_t index, int array) const
     return values[index];
 }
 
-void TDataLas::SetValue(size_t index, double value, int array)
+void TDataLas::SetValue(size_t index, double value, int array, TTypeEdit typeEdit)
 {
     values[index] = value;
 }

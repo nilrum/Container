@@ -120,13 +120,13 @@ public:
     virtual double Key(size_t index) const{ return 0; };
     virtual size_t SetKey(size_t index, double value, bool isSort, TTypeEdit typeEdit){ return index; };
     virtual double Value(size_t index, int array) const { return 0; };
-    virtual void SetValue(size_t index, double value, int array){};
+    virtual void SetValue(size_t index, double value, int array, TTypeEdit typeEdit) {};
     virtual size_t CountValue() const { return 0; };
     virtual size_t CountArray() const { return 1; };
 
     inline size_t SetKey(size_t index, double value){ return SetKey(index, value, true, TTypeEdit::FullUpdate); }
     inline double Value(size_t index) const { return Value(index, 0); }
-    inline void SetValue(size_t index, double value){ SetValue(index, value, 0); };
+    inline void SetValue(size_t index, double value, int array = 0){ SetValue(index, value, array, TTypeEdit::FullUpdate); };
 
     TString Title() const { return Name() + (Unit().empty() ? TString() : ("," + Unit())); }
 

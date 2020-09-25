@@ -145,7 +145,7 @@ public:
     double Key(size_t index) const override;
     size_t SetKey(size_t index, double value, bool isSort, TTypeEdit typeEdit) override;
     double Value(size_t index, int array) const override;
-    void SetValue(size_t index, double value, int array) override;
+    void SetValue(size_t index, double value, int array, TTypeEdit typeEdit) override;
     size_t CountValue() const override;
 
     const double* PtrKey() override;

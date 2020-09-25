@@ -69,7 +69,7 @@ public:
         return ValImpl(index, array);
     }
 
-    void SetValue(size_t index, double value, int array) override
+    void SetValue(size_t index, double value, int array, TTypeEdit typeEdit) override
     {
         *(ValImpl(index) + array) = TValue((value - TDataBinProp::coefB) / TDataBinProp::coefA);
     }
@@ -181,7 +181,7 @@ public:
         return cashValue[array];
     }
 
-    void SetValue(size_t index, double value, int array) override
+    void SetValue(size_t index, double value, int array, TTypeEdit typeEdit) override
     {
 
     }
