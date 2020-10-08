@@ -247,7 +247,7 @@ protected:
         int indKus = 0;
         size_t count = N + coef.size() - 1;
         TValue* ptrSpad = TDataBin<TValue, TKey>::ValImpl(index);
-        for(int i = 0, ir = 0; (i < count) && (ir < N); i++)
+        for(size_t i = 0, ir = 0; (i < count) && (ir < N); i++)
         {
             if(ptrSpad[i] == -32768)//если дошли до маркера меняем коэффициент
             {

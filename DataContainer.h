@@ -59,6 +59,7 @@ public:
     TPtrData FindData(const TString& pathData);
     virtual TPtrData FindDataPath(const TVecString &path, size_t pos, bool isThis);
     virtual TVecData FindDataPred(const TFindPred& pred);
+    inline TVecData FindDataAll() { return FindDataPred([](const TPtrData&){ return true; }); }
 
     TOnNameChanged OnNameChanged;
 protected:
@@ -161,8 +162,8 @@ public:
     virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
 
 
-    virtual void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit){};
-
+    virtual void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, double start, double stop){};
+    inline void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit){ ApplyScaleDeltaKey(scale, delta, typeEdit, NAN, NAN); }
     void Assign(const TPtrData& value);
 
     PROPERTIES_CREATE(TDataBase, TPropertyClass, NO_CREATE(),
