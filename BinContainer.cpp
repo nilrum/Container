@@ -31,10 +31,11 @@ TVecData THeaderBin::LoadableData(const TString &path)
     return TVecData();
 }
 
-TResult THeaderBin::LoadData(const TVecData &datas)
+TResult THeaderBin::LoadData(const TVecData &datas, const TPtrProgress& progress)
 {
     return TResult();
 }
+
 
 TString DosToUtf8(const TString& dos)
 {

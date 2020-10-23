@@ -64,6 +64,190 @@ TEST(FindIndex, FindTryIndexes)
     ASSERT_EQ(last, 3);
 }
 
+TEST(NormDataNan, OneData)
+{
+    TVecDouble depth{4., 6., 8. };
+    TVecDouble vals{8., 12., 16. };
+    /*std::shared_ptr<TSimpleData> simple = std::make_shared<TSimpleData>();
+    simple->Set(&depth, &vals, 1, false, TTypeEdit::NoUpdate);
+
+    TVecVecDouble res = NormDataNan(1., 10., 1., {simple}, NAN);*/
+
+    TVecNormInfo vec = {{depth.begin(), depth.end(), vals.begin()}};
+    TVecVecDouble res = NormLas(vec, 1., 10., 1.);
+
+    ASSERT_EQ(res.size(), 2);//глубина и нормированное значение
+
+    EXPECT_EQ(res[0].size(), 10);
+    EXPECT_EQ(res[0][0], 1.);
+    EXPECT_EQ(res[0][1], 2.);
+    EXPECT_EQ(res[0][2], 3.);
+    EXPECT_EQ(res[0][3], 4.);
+    EXPECT_EQ(res[0][4], 5.);
+    EXPECT_EQ(res[0][5], 6.);
+    EXPECT_EQ(res[0][6], 7.);
+    EXPECT_EQ(res[0][7], 8.);
+    EXPECT_EQ(res[0][8], 9.);
+    EXPECT_EQ(res[0][9], 10.);
+
+    EXPECT_EQ(res[1].size(), 10);
+    EXPECT_TRUE(std::isnan(res[1][0]));
+    EXPECT_TRUE(std::isnan(res[1][1]));
+    EXPECT_TRUE(std::isnan(res[1][2]));
+    EXPECT_EQ(res[1][3], 8.);
+    EXPECT_EQ(res[1][4], 10);
+    EXPECT_EQ(res[1][5], 12);
+    EXPECT_EQ(res[1][6], 14);
+    EXPECT_EQ(res[1][7], 16);
+    EXPECT_TRUE(std::isnan(res[1][8]));
+    EXPECT_TRUE(std::isnan(res[1][9]));
+}
+
+
+
+TEST(NormDataNan, OneArrayData)
+{
+    TVecDouble depth{4., 6., 8. };
+    TVecVecDouble vals{{8., 12., 16. }, {16., 24., 32.}};
+    /*std::shared_ptr<TSimpleData> simple = std::make_shared<TSimpleData>();
+    simple->Set(&depth, &vals[0], 2, false, TTypeEdit::NoUpdate);
+
+    TVecVecDouble res = NormDataNan(1., 10., 1., {simple}, NAN);*/
+
+    TVecNormInfo vec = {
+            {depth.begin(), depth.end(), vals[0].begin()},
+            {depth.begin(), depth.end(), vals[1].begin()}
+    };
+    TVecVecDouble res = NormLas(vec, 1., 10., 1.);
+
+    ASSERT_EQ(res.size(), 3);//глубина и нормированные значения
+
+    EXPECT_EQ(res[0].size(), 10);
+    EXPECT_EQ(res[0][0], 1.);
+    EXPECT_EQ(res[0][1], 2.);
+    EXPECT_EQ(res[0][2], 3.);
+    EXPECT_EQ(res[0][3], 4.);
+    EXPECT_EQ(res[0][4], 5.);
+    EXPECT_EQ(res[0][5], 6.);
+    EXPECT_EQ(res[0][6], 7.);
+    EXPECT_EQ(res[0][7], 8.);
+    EXPECT_EQ(res[0][8], 9.);
+    EXPECT_EQ(res[0][9], 10.);
+
+    EXPECT_EQ(res[1].size(), 10);
+    EXPECT_TRUE(std::isnan(res[1][0]));
+    EXPECT_TRUE(std::isnan(res[1][1]));
+    EXPECT_TRUE(std::isnan(res[1][2]));
+    EXPECT_EQ(res[1][3], 8.);
+    EXPECT_EQ(res[1][4], 10);
+    EXPECT_EQ(res[1][5], 12);
+    EXPECT_EQ(res[1][6], 14);
+    EXPECT_EQ(res[1][7], 16);
+    EXPECT_TRUE(std::isnan(res[1][8]));
+    EXPECT_TRUE(std::isnan(res[1][9]));
+
+    EXPECT_EQ(res[1].size(), 10);
+    EXPECT_TRUE(std::isnan(res[2][0]));
+    EXPECT_TRUE(std::isnan(res[2][1]));
+    EXPECT_TRUE(std::isnan(res[2][2]));
+    EXPECT_EQ(res[2][3], 16.);
+    EXPECT_EQ(res[2][4], 20);
+    EXPECT_EQ(res[2][5], 24);
+    EXPECT_EQ(res[2][6], 28);
+    EXPECT_EQ(res[2][7], 32);
+    EXPECT_TRUE(std::isnan(res[2][8]));
+    EXPECT_TRUE(std::isnan(res[2][9]));
+}
+
+
+
+TEST(NormDataNan, VecData)
+{
+    TVecDouble depth{4., 6., 8. };
+    TVecDouble vals{8., 12., 16. };
+
+    TVecDouble depth2{1., 3., 5. };
+    TVecDouble vals2{8., 12., 16. };
+
+    TVecDouble depth3{6., 8., 10. };
+    TVecDouble vals3{8., 12., 16. };
+    /*
+    std::shared_ptr<TSimpleData> simple = std::make_shared<TSimpleData>();
+    simple->Set(&depth, &vals, 1, false, TTypeEdit::NoUpdate);
+
+    std::shared_ptr<TSimpleData> simple2 = std::make_shared<TSimpleData>();
+    simple2->Set(&depth2, &vals, 1, false, TTypeEdit::NoUpdate);
+
+    std::shared_ptr<TSimpleData> simple3 = std::make_shared<TSimpleData>();
+    simple3->Set(&depth3, &vals, 1, false, TTypeEdit::NoUpdate);
+
+    TVecVecDouble res = NormDataNan(1., 10., 1., {simple, simple2, simple3}, NAN);
+*/
+    TVecNormInfo vec = {
+            {depth.begin(), depth.end(), vals.begin()},
+            {depth2.begin(), depth2.end(), vals2.begin()},
+            {depth3.begin(), depth3.end(), vals3.begin()}
+    };
+    TVecVecDouble res = NormLas(vec, 1., 10., 1.);
+
+    ASSERT_EQ(res.size(), 4);//глубина и нормированное значение
+
+    EXPECT_EQ(res[0].size(), 10);
+    EXPECT_EQ(res[0][0], 1.);
+    EXPECT_EQ(res[0][1], 2.);
+    EXPECT_EQ(res[0][2], 3.);
+    EXPECT_EQ(res[0][3], 4.);
+    EXPECT_EQ(res[0][4], 5.);
+    EXPECT_EQ(res[0][5], 6.);
+    EXPECT_EQ(res[0][6], 7.);
+    EXPECT_EQ(res[0][7], 8.);
+    EXPECT_EQ(res[0][8], 9.);
+    EXPECT_EQ(res[0][9], 10.);
+
+    EXPECT_EQ(res[1].size(), 10);
+    EXPECT_TRUE(std::isnan(res[1][0]));
+    EXPECT_TRUE(std::isnan(res[1][1]));
+    EXPECT_TRUE(std::isnan(res[1][2]));
+    EXPECT_EQ(res[1][3], 8.);
+    EXPECT_EQ(res[1][4], 10);
+    EXPECT_EQ(res[1][5], 12);
+    EXPECT_EQ(res[1][6], 14);
+    EXPECT_EQ(res[1][7], 16);
+    EXPECT_TRUE(std::isnan(res[1][8]));
+    EXPECT_TRUE(std::isnan(res[1][9]));
+
+    EXPECT_EQ(res[2].size(), 10);
+    EXPECT_EQ(res[2][0], 8.);
+    EXPECT_EQ(res[2][1], 10);
+    EXPECT_EQ(res[2][2], 12);
+    EXPECT_EQ(res[2][3], 14);
+    EXPECT_EQ(res[2][4], 16);
+    EXPECT_TRUE(std::isnan(res[2][5]));
+    EXPECT_TRUE(std::isnan(res[2][6]));
+    EXPECT_TRUE(std::isnan(res[2][7]));
+    EXPECT_TRUE(std::isnan(res[2][8]));
+    EXPECT_TRUE(std::isnan(res[2][9]));
+
+    EXPECT_EQ(res[3].size(), 10);
+    EXPECT_TRUE(std::isnan(res[3][0]));
+    EXPECT_TRUE(std::isnan(res[3][1]));
+    EXPECT_TRUE(std::isnan(res[3][2]));
+    EXPECT_TRUE(std::isnan(res[3][3]));
+    EXPECT_TRUE(std::isnan(res[3][4]));
+    EXPECT_EQ(res[3][5], 8.);
+    EXPECT_EQ(res[3][6], 10);
+    EXPECT_EQ(res[3][7], 12);
+    EXPECT_EQ(res[3][8], 14);
+    EXPECT_EQ(res[3][9], 16);
+
+}
+
+TEST(Translit, Call)
+{
+    TString input = "АБВГДЕЁЖЗИЙКЛМНОПРСТУ Ф Х Ц Ч Ш Щ ЪЫЬ Э Ю Я абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+    TString output = "ABVGDEEOZHZIIKLMNOPRSTU F H TS CH SH SCH Y E YU YA abvgdeeozhziiklmnoprstufhtschshschyeyuya";
+    EXPECT_EQ(Transliteration(input), output);
+}
 
 TEST(TLas, InitLas)
 {
@@ -73,7 +257,7 @@ TEST(TLas, InitLas)
 
 TEST(TLas, ReadHeader)
 {
-    TLas las;
+    TLasReader las;
     EXPECT_TRUE(las.Read("0.las").IsNoError());
     EXPECT_EQ(las.IsWrap(), false);
     EXPECT_EQ(las.NullValue(), 9999.99);
@@ -99,7 +283,7 @@ TEST(TLasHeader, LoadFile0)
     EXPECT_EQ(loadable.size(), 7);
     EXPECT_EQ(loadable[0]->Name(), "MM");
     EXPECT_EQ(header.DepthUnit(), duMeter);
-    EXPECT_TRUE(header.LoadData(loadable).IsNoError());
+    EXPECT_TRUE(header.LoadData(loadable, TPtrProgress()).IsNoError());
 }
 
 TEST(TLasHeader, LoadFile1)
@@ -174,4 +358,27 @@ TEST(TLasHeader, LoadFile2)
 
     EXPECT_EQ(data7->LastKey(), -0.42);
     EXPECT_EQ(data7->LastValue(), 26749.);
+}
+
+TEST(TLasWriter, Write)
+{
+    TLasWriter writer;
+    writer.SetWellInfo(TWellInfoInd::wiSTRT, 1);
+    writer.SetWellInfo(TWellInfoInd::wiSTOP, 10);
+    writer.SetWellInfo(TWellInfoInd::wiSTEP, 0.2);
+    writer.SetWellInfo(TWellInfoInd::wiWELL, "Well");
+
+    TVecDouble depth{4., 6., 8. };
+    TVecDouble vals{8., 12., 16. };
+
+    TVecDouble depth2{1., 3., 5. };
+    TVecDouble vals2{8., 12., 16. };
+
+    writer.AddCurveInfo("GR", "API", "GR curve") =
+            {depth.begin(), depth.end(), vals.begin(), 0, writer.WellInfoDbl(wiNULL)};
+    writer.AddCurveInfo("IS", "mA", "Current curve", "%10.2f") =
+            {depth2.begin(), depth2.end(), vals2.begin(), 0, writer.WellInfoDbl(wiNULL)};
+
+    EXPECT_TRUE(writer.Write("writer.las").IsNoError());
+
 }

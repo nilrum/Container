@@ -35,8 +35,8 @@ VAR_LIST(
     Add(res, DOUBLE_LINE(TOut, C, short))->CLB(float, KoefTOutA, KoefTOutB, ucTemp)->SetKeyDelta(2.845);
     Add(res, DOUBLE_LINE(TIn, C, short))->CLB(float, KoefTinA, KoefTinB, ucTemp)->SetKeyDelta(1.620);
     Add(res, DOUBLE_LINE(Press, atm, short))->CLB(float, KoefManA, KoefManB, ucPress)->SetKeyDelta(1.330);
-    Add(res, DOUBLE_LINE_ARRAY(ZS, ZS1, raw, short, TDataBinOver, 54, COUNTCOEF({15, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(1.948);
-    Add(res, DOUBLE_LINE_ARRAY(ZL, ZL1, raw, short, TDataBinOver, 54, COUNTCOEF({30, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(2.340);
-    Add(res, DOUBLE_LINE_ARRAY(ZSm, ZSm1, raw, short, TDataBinOver, 30, COUNTCOEF({30, 250.}, {30, 25.})))->SetKeyDelta(2.340);
+    Add(res, DOUBLE_LINE_ARRAY_COEF(ZS, ZS1, raw, short, TDataBinOver, 54, COUNTCOEF({15, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(1.948);
+    Add(res, DOUBLE_LINE_ARRAY_COEF(ZL, ZL1, raw, short, TDataBinOver, 54, COUNTCOEF({30, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(2.340);
+    Add(res, DOUBLE_LINE_ARRAY_COEF(ZSm, ZSm1, raw, short, TDataBinOver, 30, COUNTCOEF({30, 250.}, {30, 25.})))->SetKeyDelta(2.340);
     )
 )

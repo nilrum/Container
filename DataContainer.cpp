@@ -33,15 +33,16 @@ TResult TContainer::LoadFile(const TString &path, bool isCheck)
         TResult r = header->CheckFile(path);
         if(r.IsError()) return r;
     }
-    return LoadData(header->LoadableData(path));//по умолчанию загружаем все кривые
+    return LoadData(header->LoadableData(path), TPtrProgress());//по умолчанию загружаем все кривые
 }
 
-TResult TContainer::LoadData(const TVecData &value)
+TResult TContainer::LoadData(const TVecData &value, const TPtrProgress& progress)
 {
     childData = value;
-    for(const auto& child : childData)
-        child->SetParent(std::dynamic_pointer_cast<TBaseContainer>(shared_from_this()));
-    return header->LoadData(childData);
+    if(weak_from_this().expired() == false)
+        for(const auto& child : childData)
+            child->SetParent(std::dynamic_pointer_cast<TBaseContainer>(shared_from_this()));
+    return header->LoadData(childData, progress);
 }
 
 TPtrHeader TContainer::HeaderFromFile(const TString& path)
@@ -114,22 +115,22 @@ TPtrHeader TContainer::FindHeader(const TString &version)
     return TPtrHeader();
 }
 
-TString TContainer::Info(int index) const
+TString TContainer::Info(size_t index) const
 {
     return header->Info(index);
 }
 
-void TContainer::SetInfo(int index, const TString &value) 
+void TContainer::SetInfo(size_t index, const TString &value)
 {
     header->SetInfo(index, value);
 }
 
-double TContainer::InfoDouble(int index) const
+double TContainer::InfoDouble(size_t index) const
 {
     return header->Info(index);
 }
 
-void TContainer::SetInfoDouble(int index, double value)
+void TContainer::SetInfoDouble(size_t index, double value)
 {
     header->SetInfo(index, value);
 }
@@ -185,20 +186,36 @@ void TDataBase::Assign(const TPtrData &value)
     SetKeyDelta(value->KeyDelta());
 }
 
-TEnum TDataBase::IndUnit() const
+int TDataBase::IndUnit() const
 {
-    return UNIT->FromCategory(category).SetIndex(indUnit);
-}
-
-void TDataBase::SetIndUnitEn(const TEnum &value)
-{
-    indUnit = value;
-    SetUnit(UNIT->FromCategory(category).Names()[indUnit]);
+    return indUnit;
 }
 
 void TDataBase::SetIndUnit(int value)
 {
     indUnit = value;
+}
+
+TVariable TDataBase::Unit() const
+{
+    if(category == ucNone || indUnit == 0)
+        return unit;
+    else
+        return Single<TUnitProfile>().FromCategory(category).SetIndex(indUnit);
+}
+
+void TDataBase::SetUnit(const TVariable &value)
+{
+    if(category == ucNone)
+        unit = value.ToString();
+    else
+        indUnit = value.GetEnum().Index();
+}
+
+TString TDataBase::Title() const
+{
+    TString u = Unit();
+    return Name() + (u.empty() ? TString() : ("," + u));
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -307,7 +324,7 @@ TVecVecDouble NormData(double begin, double end, double step, const TVecVecDoubl
     double db = depth[i - 1];    //начальная глубина для точки
     double de = depth[i];        //конечная глубина
 
-    while (i < depth.size() && depthInd < newCount)
+    while (depthInd < newCount)
     {
         if (TDoubleCheck::Less(begin, de))
         {
@@ -322,9 +339,124 @@ TVecVecDouble NormData(double begin, double end, double step, const TVecVecDoubl
         else
         {
             i++;
+            if(i >= depth.size()) break;
             db = depth[i - 1];    //начальная глубина для точки
             de = depth[i];        //конечная глубина
         }
     }
+
+    if(depthInd < newCount)//если данных не хватило для нормировки удалим конец
+        for(auto& norm : dataNorm)
+            norm.erase(norm.begin() + depthInd, norm.end());
+
     return dataNorm;
+}
+
+TVecVecDouble NormDataNan(double begin, double end, double step, const TVecData &dataVec, double null, const TPtrProgress& progress)
+{
+    size_t normCount = int(1 + (end - begin) / step);
+
+    size_t countArray = 1;//глубина
+    for(const auto& d : dataVec)
+        countArray += d->CountArray();
+
+    if(progress)
+    {
+        progress->SetMax(countArray);
+        progress->SetTypeProgress(TProgress::tpStep);
+    }
+
+    TVecVecDouble normVec(countArray, TVecDouble(normCount));
+    TVecDouble& depth = normVec[0];
+    size_t i = 1;
+    for(const auto& data : dataVec)
+    {
+        for (size_t array = 0; array < data->CountArray(); array++)
+        {
+            auto &norm = normVec[i++];
+
+            auto beginKey = data->BeginKey();
+            auto endKey = data->EndKey();
+
+            auto beginVal = data->BeginValue(array);
+
+            double b = begin;
+            size_t numNorm = 0;
+            size_t numData = 0;
+            for (; numNorm < normCount; numNorm++)
+            {
+                if (beginKey + numData == endKey || b < beginKey[numData])
+                {
+                    norm[numNorm] = null;
+                    depth[numNorm] = b;
+                }
+                else
+                {
+                    numData++;//переходим к следующей точке
+                    break;
+                }
+                b += step;
+            }
+            while (numNorm < normCount && beginKey + numData != endKey)
+            {
+                if (b > beginKey[numData])//если b больше текущих данных
+                {
+                    numData++;//переходим к следующим
+                }
+                else
+                {
+                    double scale = (b - beginKey[numData - 1]) / (beginKey[numData] - beginKey[numData - 1]);
+                    norm[numNorm] = beginVal[numData - 1] + (beginVal[numData] - beginVal[numData - 1]) * scale;
+                    depth[numNorm] = b;
+                    numNorm++;
+                    b += step;
+                }
+            }
+            for (; numNorm < normCount; numNorm++)
+            {
+                norm[numNorm] = null;
+                depth[numNorm] = b;
+                b += step;
+            }
+        }
+        if(progress) progress->Progress(1);
+    }
+    if(progress) progress->Finish();
+    return normVec;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void TSimpleData::Set(TVecDouble *keys, TVecDouble *vals, int countArray, bool isSwap, TTypeEdit typeEdit)
+{
+    key = *keys;
+    arrays.resize(countArray);
+    for(auto& a : arrays)
+    {
+        a = *vals;
+        vals++;
+    }
+}
+
+TVecDouble::const_iterator TSimpleData::BeginKey() const
+{
+    return key.begin();
+}
+
+TVecDouble::const_iterator TSimpleData::EndKey() const
+{
+    return key.end();
+}
+
+TVecDouble::const_iterator TSimpleData::BeginValue(size_t array) const
+{
+    if(array < arrays.size())
+        return arrays[array].begin();
+    return TVecDouble::const_iterator();
+}
+
+TVecDouble::const_iterator TSimpleData::EndValue(size_t array) const
+{
+    if(array < arrays.size())
+        return arrays[array].end();
+    return TVecDouble::const_iterator();
 }

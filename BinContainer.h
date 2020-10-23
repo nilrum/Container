@@ -16,7 +16,7 @@ public:
 
     TResult CheckFile(const TString& path) override;
     TVecData LoadableData(const TString& path) override; //получаем список кривых которые доступны для загрузки из файла
-    TResult LoadData(const TVecData& datas) override;       //загружаем список кривых
+    TResult LoadData(const TVecData& datas, const TPtrProgress& progress) override;       //загружаем список кривых
 
 protected:
     std::function<TPtrBinFile()> createFile;
@@ -46,18 +46,8 @@ template <typename TValue, typename TKey>
 class TDataBin : public TDataBinProp {
 public:
     TDataBin(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f) :
-            unit(u), offset(ov), offsetKey(ok), file(f)
-    { name = n; }
-
-    TString Unit() const override
-    {
-        return unit;
-    }
-
-    void SetUnit(const TString &value) override
-    {
-        unit = value;
-    }
+            offset(ov), offsetKey(ok), file(f)
+    { name = n; unit = u; }
 
     double Key(size_t index) const override
     {
@@ -114,8 +104,6 @@ public:
         }
     }
 protected:
-    TString title;          //название кривой
-    TString unit;           //ед. измерения кривой
     size_t offset = 0;      //смещение относительно начало структуры
     size_t offsetKey = 0;   //смещение для глубины
     double coefKey = 1.;    //коэффициент для глубины до целых единиц(м. фт.)
@@ -135,6 +123,8 @@ protected:
     }
 };
 
+//класс проверки на Null value в бинарных данных
+
 template<typename T, size_t Offset>
 class TNullChecker{
 protected:
@@ -144,27 +134,36 @@ protected:
     }
 };
 
-template <typename TValue, typename TKey, typename TChecker>
-class TDataBinNull : public TDataBin<TValue, TKey>, public TChecker {
+template <typename TValue, typename TKey, size_t N>
+struct TDataBinN : public TDataBin<TValue, TKey> {
 public:
-    TDataBinNull(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f) :
-            TDataBin<TValue, TKey>(n, u, ov, ok, f){}
+    TDataBinN(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f)
+        :TDataBin<TValue, TKey>(n, u, ov, ok, f){}
 
+    size_t CountArray() const override { return N; }
+};
+
+template <typename TBase, typename TChecker>
+struct TDataNull : public TBase, public TChecker {
+public:
+    template<typename... TArgs>
+        TDataNull(TArgs&&... args):TBase(args...){}
     double Value(size_t index, int array) const override
     {
-        if(TChecker::IsNull(this->file->PtrData(index)))
+        if(TChecker::IsNull(TBase::file->PtrData(index)))
             return NAN;
-        return TDataBin<TValue, TKey>::ValImpl(index, array);
+        return TBase::Value(index, array);
     }
 };
+
 
 using TCountCoef = std::vector<std::tuple<size_t, double>>;
 
 template <typename TValue, typename TKey, size_t N>
-struct TDataBinOver : public TDataBin<TValue, TKey>{
+struct TDataBinOver : public TDataBinN<TValue, TKey, N>{
 public:
     TDataBinOver(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TCountCoef& arrayCoef):
-            TDataBin<TValue, TKey>(n, u, ov, ok, f)
+            TDataBinN<TValue, TKey, N>(n, u, ov, ok, f)
     {
         coef = TCountCoef(arrayCoef.size());
         for(size_t i = 0; i < coef.size(); i++)
@@ -185,8 +184,6 @@ public:
     {
 
     }
-
-    size_t CountArray() const override { return N; }
 
 protected:
     mutable int cashIndex = -1;
@@ -218,10 +215,10 @@ protected:
 };
 
 template <typename TValue, typename TKey, size_t N>
-struct TDataBinMark : public TDataBin<TValue, TKey>{
+struct TDataBinMark : public TDataBinN<TValue, TKey, N>{
 public:
     TDataBinMark(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
-            TDataBin<TValue, TKey>(n, u, ov, ok, f), coef(arrayCoef)
+            TDataBinN<TValue, TKey, N>(n, u, ov, ok, f), coef(arrayCoef)
     {
         for(size_t i = 0; i < coef.size(); i++)
             coef[i] = coef.back() / coef[i];
@@ -236,15 +233,13 @@ public:
         }
         return cashValue[array];
     }
-
-    size_t CountArray() const override { return N; }
 protected:
     mutable int cashIndex = -1;
     mutable double cashValue[N];
     TVecDouble coef;
     void CalcCash(int index, double* cash) const
     {
-        int indKus = 0;
+        size_t indKus = 0;
         size_t count = N + coef.size() - 1;
         TValue* ptrSpad = TDataBin<TValue, TKey>::ValImpl(index);
         for(size_t i = 0, ir = 0; (i < count) && (ir < N); i++)
@@ -335,6 +330,14 @@ TString DosToUtf8(const TString& dos);
 TString Cp866ToCp1251(const TString& dos);
 TString Cp1251ToUt8(const TString& val);
 
+template<typename T>
+TString CheckLast0(const T& value)
+{
+    TString res(value);
+    if(res.size() > std::size(value)) res.resize(std::size(value));
+    return res;
+}
+
 #define KEY_LINE(NAME, TYPE, STRUCT)\
     using TKey = TYPE; \
     using TStruct = STRUCT;\
@@ -346,8 +349,10 @@ TString Cp1251ToUt8(const TString& val);
 
 #define DOUBLE_LINE(NAME, UNIT, TYPE) DOUBLE_LINE_T(NAME, UNIT, TDataBin, TYPE)
 
+#define DOUBLE_LINE_ARRAY(NAME, OFF_NAME, UNIT, TYPE, ALG, COUNT)\
+    std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, offsetof(TStruct::TDataType, OFF_NAME), ok, file)
 
-#define DOUBLE_LINE_ARRAY(NAME, OFF_NAME, UNIT, TYPE, ALG, COUNT, COEF)\
+#define DOUBLE_LINE_ARRAY_COEF(NAME, OFF_NAME, UNIT, TYPE, ALG, COUNT, COEF)\
     std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, offsetof(TStruct::TDataType, OFF_NAME), ok, file, COEF)
 
 #define COEF(...) TVecDouble{  __VA_ARGS__ }

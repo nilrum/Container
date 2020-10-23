@@ -19,18 +19,16 @@ ENUM(TCurrentUnit , cuNone, cuMA);
 ENUM(TPressUnit   , puNone, puAtm, puMPa, puPsi);
 ENUM(TWidthUnit   , wuNone, wuMM, wuInch);
 
-//TString EnumNameFromCategory(TUnitCategory value);
-//TString EnumNameFromCategory(int value);
 
 //хранит информацию о текущих единицах измерения по умолчанию
 class TUnitProfile : public TPropertyClass{
 public:
     TUnitProfile(){ name = "Russian"; };
 
-    TEnum FromCategory(TUnitCategory cat);     //возврашает значение property от категории,
-                                                // например cat == ucDepth -> либо 1 либо 2
-    TString FullName(TUnitCategory cat);     //возвращает в строковом представлении cat == ucDepth -> ucMeter or ucFoot
-    TString ShortName(TUnitCategory cat);    //возвращает в строковом представлении короткий вариант cat == ucDepth -> ucMeter_s or ucFoot_s
+    TEnum FromCategory(TUnitCategory cat);  //возврашает значение property от категории,
+                                            // например cat == ucDepth -> либо 1 либо 2
+    TString FullName(TUnitCategory cat);    //возвращает в строковом представлении cat == ucDepth -> ucMeter or ucFoot
+    TString ShortName(TUnitCategory cat);   //возвращает в строковом представлении короткий вариант cat == ucDepth -> ucMeter_s or ucFoot_s
 
     void SetFromCategory(TUnitCategory cat, int value);
 

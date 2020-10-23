@@ -21,18 +21,18 @@ TEST(DataContainer, ContFromFile)
     EXPECT_EQ(cont.Info(iiWell), TString("МИД-4"));
     EXPECT_EQ(cont.Info(iiDate), "14.08.2019");
     EXPECT_EQ(cont.Info(iiTime), "11:24");
-    EXPECT_TRUE(fabs(cont.InfoDouble(iiBegin) - 2154.040039) < 0.0001);
-    EXPECT_TRUE(fabs(cont.InfoDouble(iiEnd) - 2151.496826) < 0.0001);
+    EXPECT_TRUE(TDoubleCheck::Equal(cont.InfoDouble(iiBegin), 2154.040039));
+    EXPECT_TRUE(TDoubleCheck::Equal(cont.InfoDouble(iiEnd), 2151.496826));
     EXPECT_EQ(cont.InfoDouble(iiStep), 0.0);
-    EXPECT_EQ(cont.Info(iiCompany), "");
+    EXPECT_EQ(cont.Info(iiCompany), "MD5");
     EXPECT_EQ(cont.Info(iiServComp), "Оператор");
 
-    ASSERT_EQ(cont.CountChildData(), 8);
-    EXPECT_EQ(cont.ChildData(0)->Name(), "IL");
-    EXPECT_EQ(cont.ChildData(0)->Unit(), "mA");
+    ASSERT_EQ(cont.CountChildData(), 17);
+    EXPECT_EQ(cont.ChildData(0)->Name(), "GR");
+    EXPECT_EQ(cont.ChildData(0)->Unit().ToString(), "API");
     EXPECT_TRUE(cont.ChildData(0)->CountValue());
 
-    EXPECT_EQ(cont.ChildData(1)->Name(), "TOut");
+    EXPECT_EQ(cont.ChildData(1)->Name(), "IM");
     EXPECT_TRUE(cont.ChildData(1)->CountValue());
 }
 
@@ -52,6 +52,6 @@ TEST(DataContainer, StepContFromFile)
     ASSERT_TRUE(cont.LoadData(loadable).IsNoError());       //загружаем выраные кривые
     EXPECT_EQ(cont.CountChildData(), loadable.size());
 
-    EXPECT_EQ(cont.ChildData(0)->Name(), "IL");
+    EXPECT_EQ(cont.ChildData(0)->Name(), "GR");
     EXPECT_TRUE(cont.ChildData(0)->CountValue());
 }

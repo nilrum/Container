@@ -59,7 +59,7 @@ public:
         if(file.get() == nullptr) return TBinFileResult::ErrOpen;
         fread(&header, sizeof(THeader), 1, file.get());
         if(isCheck && CheckHeader(header) == false) return TBinFileResult::ErrVersion;
-        size_t count1 = std::ftell(file.get());
+
         std::fseek(file.get(), 0, SEEK_END);
         size_t count = std::ftell(file.get());
         data.resize((count - sizeof(THeader))/ sizeof(TData));

@@ -14,7 +14,8 @@ set(CONTAINER_TESTS DataContainerTest.cpp MID4ContainerTest.cpp)
 
 #Target
 if(NOT TARGET ContainerTest)
+    #add_definitions("-D_CONTAINER_DEBUG_LEVEL")
     add_executable(ContainerTest ${CONTAINER_TESTS} ${INCL_CONTAINER})
-    target_include_directories(ContainerTest PUBLIC .. ${GOOGLETEST_DIR}/include)
+    target_include_directories(ContainerTest PUBLIC .. PUBLIC ${PROPERTY_DIR} ${GOOGLETEST_DIR}/include)
     target_link_libraries(ContainerTest Container gtest gtest_main gmock)
 endif()

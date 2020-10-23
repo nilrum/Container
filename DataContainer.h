@@ -7,8 +7,7 @@
 
 #include "PropertyClass.h"
 #include "Units.h"
-
-#include <climits>
+#include "Progress.h"
 
 class THeaderBase;
 using TPtrHeader = std::shared_ptr<THeaderBase>;
@@ -17,10 +16,18 @@ class TDataBase;
 using TPtrData = std::shared_ptr<TDataBase>;
 using TVecData = std::vector<TPtrData>;
 
-enum class TTypeEdit{NoUpdate, UpdateValues, UpdateViews, FullUpdate};
+enum class TTypeEdit{   NoUpdate = 0,
+                        UpdateDataKey = 1,
+                        UpdateDataValues = 2,
+                        UpdateData = UpdateDataKey | UpdateDataValues,
+                        UpdateViews = 4,
+                        FullUpdate = UpdateData | UpdateViews };
 
-constexpr bool IsEditValues(TTypeEdit value) { return value == TTypeEdit::UpdateValues || value == TTypeEdit::FullUpdate; }
-constexpr bool IsEditViews(TTypeEdit value) { return value == TTypeEdit::UpdateViews || value == TTypeEdit::FullUpdate; }
+constexpr bool operator & (TTypeEdit lhs, TTypeEdit rhs) { return static_cast<int>(lhs) & static_cast<int>(lhs); }
+constexpr TTypeEdit operator | (TTypeEdit lhs, TTypeEdit rhs) { return static_cast<TTypeEdit>(static_cast<int>(lhs) | static_cast<int>(lhs)); }
+
+constexpr bool IsEditValues(TTypeEdit value) { return value & TTypeEdit::UpdateData; }
+constexpr bool IsEditViews(TTypeEdit value) { return value & TTypeEdit::UpdateViews; }
 
 using TOnDataEdit = sigslot::signal<TTypeEdit>;
 using TOnNameChanged = sigslot::signal<>;
@@ -113,9 +120,6 @@ class TDataBase: public TBaseContainer{
 public:
     virtual ~TDataBase() = default;
 
-    virtual TString Unit() const{ return TString(); };
-    virtual void SetUnit(const TString& value){};
-
     virtual void Set(TVecDouble* keys, TVecDouble* vals, int countArray, bool isSwap, TTypeEdit typeEdit){};
 
     virtual double Key(size_t index) const{ return 0; };
@@ -129,7 +133,7 @@ public:
     inline double Value(size_t index) const { return Value(index, 0); }
     inline void SetValue(size_t index, double value, int array = 0){ SetValue(index, value, array, TTypeEdit::FullUpdate); };
 
-    TString Title() const { return Name() + (Unit().empty() ? TString() : ("," + Unit())); }
+    TString Title() const;
 
     inline double FirstKey() const { return Key(0); }
     inline double LastKey() const { return Key(CountValue() - 1); }
@@ -159,27 +163,36 @@ public:
     //если есть возможность отдает указатель на данные напрямую
     virtual const double* PtrKey() { return nullptr; };
     virtual const double* PtrValue(int array){ return nullptr; };
-    virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
 
+    virtual TVecDouble::const_iterator BeginKey() const { return TVecDouble::const_iterator(); }
+    virtual TVecDouble::const_iterator EndKey() const { return TVecDouble::const_iterator(); }
+
+    virtual TVecDouble::const_iterator BeginValue(size_t array) const { return TVecDouble::const_iterator(); }
+    virtual TVecDouble::const_iterator EndValue(size_t array) const { return TVecDouble::const_iterator(); }
+
+    virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
 
     virtual void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, double start, double stop){};
     inline void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit){ ApplyScaleDeltaKey(scale, delta, typeEdit, NAN, NAN); }
     void Assign(const TPtrData& value);
 
     PROPERTIES_CREATE(TDataBase, TPropertyClass, NO_CREATE(),
-        PROPERTY(TString, unit, Unit, SetUnit);
+        PROPERTY(TVariable, unit, Unit, SetUnit);
         PROPERTY_READ(size_t, countArray, CountArray);
         PROPERTY(int, tag, Tag, SetTag);
         PROPERTY(bool, isUsed, IsUsed, SetIsUsed).NoSerialization();
-        PROPERTY(TUnitCategory, category, Category, SetCategory).NoSerialization();
-        PROPERTY(TEnum, indUnit, IndUnit, SetIndUnitEn).NoSerialization();
+
     )
     PROPERTY_FUN(int, tag, Tag, SetTag);
     PROPERTY_FUN_CHG(TUnitCategory, category, Category, SetCategory);
 
-    TEnum IndUnit() const;
-    void SetIndUnitEn(const TEnum& value);
+    TVariable Unit() const;
+    void SetUnit(const TVariable& value);
+
+    int IndUnit() const;
     void SetIndUnit(int value);
+
+    inline bool IsUnitEditable() const { return category != ucNone && indUnit == 0; }//может ли редактироваться ед изм
 
     virtual TVecDouble Coefs() const { return TVecDouble(); }
     virtual void SetCoefs(const TVecDouble& value) { }
@@ -197,6 +210,24 @@ protected:
     int tag = 0;
     TUnitCategory category = ucNone;
     int indUnit = 0;
+    TString unit;
+};
+
+class TSimpleData : public TDataBase{
+public:
+
+    virtual size_t CountValue() const { return key.size(); };
+    virtual size_t CountArray() const { return arrays.size(); };
+
+    void Set(TVecDouble* keys, TVecDouble* vals, int countArray, bool isSwap, TTypeEdit typeEdit) override;
+    virtual TVecDouble::const_iterator BeginKey() const;
+    virtual TVecDouble::const_iterator EndKey() const;
+
+    virtual TVecDouble::const_iterator BeginValue(size_t array) const;
+    virtual TVecDouble::const_iterator EndValue(size_t array) const;
+protected:
+    TVecDouble key;
+    TVecVecDouble arrays;
 };
 
 int IndexForTag(const TPtrData& value, int tag);
@@ -216,10 +247,10 @@ public:
     virtual size_t CountInfo() const;
     virtual void CopyInfo(const TPtrHeader& src){};
 
-    virtual TResult CheckFile(const TString& path) = 0;        //проверка файла на соответствие формату
+    virtual TResult CheckFile(const TString& path) = 0;     //проверка файла на соответствие формату
     virtual TVecData LoadableData(const TString& path) = 0; //получаем список кривых которые доступны для загрузки из файла
-    virtual TResult LoadData(const TVecData& datas) = 0;       //загружаем список кривых
-
+    virtual TResult LoadData(const TVecData& datas, const TPtrProgress& progress) = 0;    //загружаем список кривых
+    inline TResult LoadData(const TVecData& datas){ return LoadData(datas, TPtrProgress()); };
     virtual TDepthUnit DepthUnit() const { return duNone; }
 
     static TVecString InitDefTitle();
@@ -245,13 +276,14 @@ public:
     bool IsUp() const;
 
     TResult LoadFile(const TString& path, bool isCheck);
-    virtual TResult LoadData(const TVecData& value);
+    virtual TResult LoadData(const TVecData& value, const TPtrProgress& progress);
+    inline TResult LoadData(const TVecData& value){ return LoadData(value, TPtrProgress()); };
 
-    TString Info(int index) const;
-    virtual void SetInfo(int index, const TString& value);
+    TString Info(size_t index) const;
+    virtual void SetInfo(size_t index, const TString& value);
 
-    double InfoDouble(int index) const;
-    virtual void SetInfoDouble(int index, double value);
+    double InfoDouble(size_t index) const;
+    virtual void SetInfoDouble(size_t index, double value);
 
     static TPtrHeader HeaderFromFile(const TString& path);  //ишет шапку по файлу
     static TResult HeaderFromFile(const TString& path, TPtrHeader& hdr);
@@ -270,64 +302,6 @@ protected:
 };
 
 using TPtrContainer = std::shared_ptr<TContainer>;
-
-class TSelectLoader{
-public:
-    virtual ~TSelectLoader(){}
-
-    virtual void SetContainer(const TPtrContainer& value, const TString& path)
-    {
-        cont = value;
-        loadable = cont->Header()->LoadableData(path);
-        SetIsSelected(true);
-    }
-    virtual TResult Select()
-    {//возвращаем список выбраных кривых
-        TVecData res;
-        for(const auto& it : loadable)
-            if(it->IsUsed()) res.push_back(it);
-        return cont->LoadData(res);
-    }
-    TVecData& Loadable() { return loadable; }
-
-    inline TPtrContainer Cont() const { return cont; }
-    TDepthUnit FromConvert() const { return fromConvert; }
-    inline double Step() const { return step; };
-    inline double Begin() const{ return begin; };
-    inline double End() const { return end; };
-
-
-    TVecBool EditableVector()
-    {
-        TVecBool rez(loadable.size());
-        for(size_t i = 0; i < rez.size(); i++)
-            rez[i] = loadable[i]->Category() != ucNone && loadable[i]->IndUnit() == 0;
-        return rez;
-    }
-
-    bool IsSelected() const
-    {//выбрана ли хоть одна кривая
-        for(const auto& v : loadable)
-            if(v->IsUsed()) return true;
-        return false;
-    }
-
-    void SetIsSelected(bool value)
-    {
-        for(const auto& v : loadable)
-            v->SetIsUsedNoCall(value);
-    }
-
-protected:
-    TPtrContainer cont;
-    TVecData loadable;
-    TDepthUnit fromConvert = duNone; //из чего конвертировать
-    double begin = NAN;
-    double end = NAN;
-    double step = NAN;
-};
-
-using TPtrLoader = std::shared_ptr<TSelectLoader>;
 
 template <bool>
 struct TRange{
@@ -405,8 +379,11 @@ TVecUInt FindTryIndex(bool isUp, T* ptr, double begin, double end, double convCo
     }
     return res;
 }
-
+//нормирует данные и предполагает что у всех данных на каждой точки глубины есть значение
 TVecVecDouble NormData(double begin, double end, double step, const TVecVecDouble& data);
 
+//Нормирует в общий массив с проверкой вхождения в указанный диапазон [begin, end]
+//Глубина должна идти в одном направлении с верху вниз
+TVecVecDouble NormDataNan(double begin, double end, double step, const TVecData& dataVec, double null, const TPtrProgress& progress = TPtrProgress());
 
 #endif //TESTAPP_DATACONTAINER_H
