@@ -3,6 +3,7 @@
 //
 
 #include "Las.h"
+#include <cstring>
 
 REGISTER_CODES(TResultLas,
                TEXT_CODE(FileNotOpen, "Error opening file");
@@ -308,7 +309,7 @@ void TLasWriter::SetUnitDepth(const TString &value)
 void TLasWriter::SetDepthCountPoint(size_t value)
 {
     depthCountPoint = value;
-    curveInfos[0].frmt = TString("%") + STDFORMAT("9.%df", depthCountPoint);
+    curveInfos[0].frmt = TString("%") + STDFORMAT("9.%uf", depthCountPoint);
 }
 
 TResult TLasWriter::Write(const TString &path, const TPtrProgress& progress)
@@ -339,9 +340,9 @@ TResult TLasWriter::Write(const TString &path, const TPtrProgress& progress)
 
     for(size_t i = wiSTRT; i <= wiSTEP; i++)
         fprintf(f, "  %s.%s %30.*f: %s\n", STR(WellInfoTitle(i)), STR(unitDepth),
-                depthCountPoint, wellInfo[i].ToDouble(), STR(lasWellInfoComments[i]));
+                int(depthCountPoint), wellInfo[i].ToDouble(), STR(lasWellInfoComments[i]));
 
-    fprintf(f, "  %s. %31.*f: %s\n", STR(WellInfoTitle(wiNULL)), depthCountPoint,
+    fprintf(f, "  %s. %31.*f: %s\n", STR(WellInfoTitle(wiNULL)), int(depthCountPoint),
             wellInfo[wiNULL].ToDouble(), STR(lasWellInfoComments[wiNULL]));
 
     for(size_t i = wiCOMP; i <= wiAPI; i++)
