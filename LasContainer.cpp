@@ -190,19 +190,28 @@ size_t TDataLas::CountValue() const
     return values.size();
 }
 
-const double *TDataLas::PtrKey()
-{
-    return depth->data();
-}
-
-const double *TDataLas::PtrValue(int array)
-{
-    if(values.empty()) return nullptr;
-    return values.data();
-}
-
 void TDataLas::SwapValue(TVecDouble &value)
 {
     values.swap(value);
+}
+
+TVecDouble::const_iterator TDataLas::BeginKey() const
+{
+    return depth->begin();
+}
+
+TVecDouble::const_iterator TDataLas::EndKey() const
+{
+    return depth->end();
+}
+
+TVecDouble::const_iterator TDataLas::BeginValue(size_t array) const
+{
+    return values.begin();
+}
+
+TVecDouble::const_iterator TDataLas::EndValue(size_t array) const
+{
+    return values.end();
 }
 

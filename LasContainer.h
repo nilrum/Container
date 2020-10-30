@@ -50,8 +50,12 @@ public:
     void SetValue(size_t index, double value, int array, TTypeEdit typeEdit) override;
     size_t CountValue() const override;
 
-    const double* PtrKey() override;
-    const double* PtrValue(int array) override;
+    TVecDouble::const_iterator BeginKey() const override;
+    TVecDouble::const_iterator EndKey() const override;
+
+    TVecDouble::const_iterator BeginValue(size_t array) const override;
+    TVecDouble::const_iterator EndValue(size_t array) const override;
+
     void SwapValue(TVecDouble& value) override;
 
     PROPERTIES(TDataLas, TDataBase,

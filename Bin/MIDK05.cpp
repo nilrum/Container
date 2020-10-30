@@ -28,15 +28,15 @@ VAR_LIST(
     ),
 VAR_LIST(
     KEY_LINE(Depth, float, TMIDK05Format);
-    Add(res, DOUBLE_LINE(GR, API, unsigned short))->CLB(float, KoefGRExtA, KoefGRExtB, ucGR)->SetKeyDelta(0.9);
-    Add(res, DOUBLE_LINE(IS, mA, short))->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(1.948);
-    Add(res, DOUBLE_LINE(IL, mA, short))->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(2.340);
-    Add(res, DOUBLE_LINE(ISm, mA, short))->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(2.340);
-    Add(res, DOUBLE_LINE(TOut, C, short))->CLB(float, KoefTOutA, KoefTOutB, ucTemp)->SetKeyDelta(2.845);
-    Add(res, DOUBLE_LINE(TIn, C, short))->CLB(float, KoefTinA, KoefTinB, ucTemp)->SetKeyDelta(1.620);
+    Add(res, DOUBLE_LINE(GR, API, unsigned short))->CLB(float, KoefGRExtA, KoefGRExtB, ucGR)->SetKeyDelta(0.945);
+    Add(res, DOUBLE_LINE(IM, mA, short))->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(1.870);
+    Add(res, DOUBLE_LINE(IL, mA, short))->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(2.290);
+    Add(res, DOUBLE_LINE(IS, mA, short))->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(1.670);
+    Add(res, DOUBLE_LINE(TOut, C, short))->CLB(float, KoefTOutA, KoefTOutB, ucTemp)->SetKeyDelta(2.800);
+    Add(res, DOUBLE_LINE(TIn, C, short))->CLB(float, KoefTinA, KoefTinB, ucTemp)->SetKeyDelta(1.679);
     Add(res, DOUBLE_LINE(Press, atm, short))->CLB(float, KoefManA, KoefManB, ucPress)->SetKeyDelta(1.330);
-    Add(res, DOUBLE_LINE_ARRAY_COEF(ZS, ZS1, raw, short, TDataBinOver, 54, COUNTCOEF({15, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(1.948);
-    Add(res, DOUBLE_LINE_ARRAY_COEF(ZL, ZL1, raw, short, TDataBinOver, 54, COUNTCOEF({30, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(2.340);
-    Add(res, DOUBLE_LINE_ARRAY_COEF(ZSm, ZSm1, raw, short, TDataBinOver, 30, COUNTCOEF({30, 250.}, {30, 25.})))->SetKeyDelta(2.340);
+    Add(res, DOUBLE_LINE_ARRAY_COEF(ZM, ZS1, raw, short, TDataBinOver, 54, COUNTCOEF({15, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(1.870);
+    Add(res, DOUBLE_LINE_ARRAY_COEF(ZL, ZL1, raw, short, TDataBinOver, 54, COUNTCOEF({30, 250.}, {54, 10.}, {54, 1.})))->SetKeyDelta(2.290);
+    Add(res, DOUBLE_LINE_ARRAY_COEF(ZS, ZSm1, raw, short, TDataBinOver, 30, COUNTCOEF({30, 250.}, {30, 25.})))->SetKeyDelta(1.670);
     )
 )

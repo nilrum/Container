@@ -111,13 +111,27 @@ TString ShortUnitDepth(TDepthUnit value);
 template<typename  T>
 TString FullUnit(T value)
 {
-    return TEnum(value).Name();
+    if constexpr (std::is_enum_v<T>)
+        return TEnum(value).Name();
+    else if constexpr (std::is_same_v<T, TEnum>)
+        return value.Name();
+    else
+        return value;
 }
 
 template<typename T>
 TString ShortUnit(T value)
 {
-    return FullUnit(value) + "_s";
+    if constexpr (std::is_enum_v<T> || std::is_same_v<T, TEnum>)
+        return FullUnit(value) + "_s";
+    else if constexpr (std::is_same_v<T, TVariable>)
+    {
+        if(value.Type() == TVariableType::Enum)
+            return ShortUnit(value.GetEnum());
+        return value.ToString();
+    }
+    else
+        return value;
 }
 
 double ConvertUnit(TUnitCategory cat, int from, int to, double value);

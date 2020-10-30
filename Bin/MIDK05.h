@@ -62,9 +62,9 @@ struct TDataMIDK05{//плюс малый зонд еще
     unsigned short MM;      //магнитная метка
     unsigned short NumMid;  //номер модуля МИД
     unsigned short GR;      //данные ГК
-    short IS;               //ток генераторной катушки короткого зонда
+    short IM;               //ток генераторной катушки короткого зонда
     short IL;               //ток длинного зонда
-    short ISm;              //ток малого зонда
+    short IS;              //ток малого зонда
     short TOut;             //внешний термометр
     short TIn;              //внутренний термометр
     short Press;              //манометр

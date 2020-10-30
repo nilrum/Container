@@ -382,3 +382,88 @@ TEST(TLasWriter, Write)
     EXPECT_TRUE(writer.Write("writer.las").IsNoError());
 
 }
+
+#include <iostream>
+
+#include <complex>
+
+#include <cmath>
+#include <math.h>
+#include <iterator>
+#include <limits>
+#include <algorithm>
+
+unsigned int bitReverse(size_t x, int log2n)
+{
+    int n = 0;
+    for (int i = 0; i < log2n; i++)
+    {
+        n <<= 1;
+        n |= (x & 1);
+        x >>= 1;
+    }
+    return n;
+}
+using comp = std::complex<double>;
+
+template<class Iter>
+void fft(Iter a, Iter b, int log2n)
+{
+    const double PI = std::atan(1.0)*4;
+    const comp J(0, 1);
+    size_t n = 1 << log2n;
+
+    for (size_t i = 0; i < n; ++i)
+        b[bitReverse(i, log2n)] = a[i];
+
+    for (int s = 1; s <= log2n; ++s)
+    {
+        int m = 1 << s;
+        int m2 = m >> 1;
+        comp w(1, 0);
+        comp wm = std::exp(-J * (PI / m2));
+
+        for (int j = 0; j < m2; ++j)
+        {
+            for (int k = j; k < n; k += m)
+            {
+                std::complex t = w * b[k + m2];
+                std::complex u = b[k];
+                b[k] = u + t;
+                b[k + m2] = u - t;
+            }
+            w *= wm;
+        }
+    }
+}
+
+TEST(FFFT, Calc)
+{
+    comp a[] = {
+            {0, 0}, {1, 1}, {3, 3}, {4, 4},
+            {4, 4}, {3, 3}, {1, 1}, {0, 0}
+    };
+    comp b[8];
+    comp c[8];
+    fft(a, b, 3);
+    EXPECT_NE(b[0].real(), 0.);
+    fft(b, c, 3);
+    EXPECT_EQ(c[0].real(), 0.);
+}
+
+/*
+int main()
+{
+
+    typedef complex<double> cx;
+    cx a[] = {
+            cx(0, 0), cx(1, 1), cx(3, 3), cx(4, 4),
+            cx(4, 4), cx(3, 3), cx(1, 1), cx(0, 0)
+    };
+
+    cx b[8];
+    fft(a, b, 3);
+    for (int i=0; i<8; ++i)
+        cout << b[i] << " ";
+
+}*/

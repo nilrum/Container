@@ -76,44 +76,14 @@ protected:
     virtual void CallUsed(const TPtrData& value);
 
     template<typename TCont>
-    TVecData FindDataPredThis(const TCont &cont, const TFindPred& pred)
-    {
-        TVecData res;
-        for(const auto& child : cont)
-        {
-            if (pred(child))
-                res.emplace_back(child);
-            FindDataPredChild(child, pred, res);
-        }
-        return res;
-    }
+    TVecData FindDataPredThis(const TCont &cont, const TFindPred& pred);
 
     template<typename TChild>
-    void FindDataPredChild(const TChild &child, const TFindPred& pred, TVecData& res)
-    {
-        if(child->CountChildData() == 0) return;
-        TVecData childRes = child->FindDataPred(pred);
-        if(childRes.size())
-            res.insert(res.end(), childRes.begin(), childRes.end());
-    }
+    void FindDataPredChild(const TChild &child, const TFindPred& pred, TVecData& res);
     template<typename TCont>
-    TPtrData FindDataThis(const TVecString &path, size_t pos, const TCont &cont)
-    {
-        if(pos < path.size() && name == path[pos])
-            return FindDataChild(path, pos + 1, cont);
-        return TPtrData();
-    }
+    TPtrData FindDataThis(const TVecString &path, size_t pos, const TCont &cont);
     template<typename TCont>
-    TPtrData FindDataChild(const TVecString &path, size_t pos, const TCont &cont)
-    {
-        if(pos < path.size())
-            for(const auto& child : cont)
-            {
-                TPtrData res = child->FindDataPath(path, pos, true);
-                if(res) return res;
-            }
-        return std::dynamic_pointer_cast<TDataBase>(shared_from_this());
-    }
+    TPtrData FindDataChild(const TVecString &path, size_t pos, const TCont &cont);
 };
 
 class TDataBase: public TBaseContainer{
@@ -135,21 +105,21 @@ public:
 
     TString Title() const;
 
-    inline double FirstKey() const { return Key(0); }
-    inline double LastKey() const { return Key(CountValue() - 1); }
+    inline double FirstKey() const                  { return Key(0); }
+    inline double LastKey() const                   { return Key(CountValue() - 1); }
 
-    inline double FirstValue(int array = 0) const { return Value(0, array); }
-    inline double LastValue(int array = 0) const { return Value(CountValue() - 1, array); }
+    inline double FirstValue(int array = 0) const   { return Value(0, array); }
+    inline double LastValue(int array = 0) const    { return Value(CountValue() - 1, array); }
 
     virtual void Insert(size_t index, const TVecDouble& keyValues, bool isSort){};
-    virtual void Delete(size_t index, size_t count){};
+    virtual void Delete(size_t index, size_t count) {};
 
     inline void Insert(size_t index, const TVecDouble& keyValues = TVecDouble()) { Insert(index, keyValues, true); }
-    inline void Delete(size_t index){ Delete(index, 1); };
+    inline void Delete(size_t index)                { Delete(index, 1); };
     inline void Add(const TVecDouble& keyValues, bool isSort = false) { Insert(CountValue(), keyValues, isSort); }
 
-    virtual void Load(FILE* file) {};
-    virtual void Save(FILE* file) {};
+    virtual TResult Load(FILE* file) { return TResult(); };
+    virtual TResult Save(FILE* file) { return TResult(); };
 
     virtual TVecString DefaultTitles() const{ return TVecString(); }
     virtual TVecString DefaultEnumTypes() const{ return TVecString(); }
@@ -161,9 +131,6 @@ public:
     inline double at(int index) const { return Key(index); }
 
     //если есть возможность отдает указатель на данные напрямую
-    virtual const double* PtrKey() { return nullptr; };
-    virtual const double* PtrValue(int array){ return nullptr; };
-
     virtual TVecDouble::const_iterator BeginKey() const { return TVecDouble::const_iterator(); }
     virtual TVecDouble::const_iterator EndKey() const { return TVecDouble::const_iterator(); }
 
@@ -180,6 +147,8 @@ public:
         PROPERTY(TVariable, unit, Unit, SetUnit);
         PROPERTY_READ(size_t, countArray, CountArray);
         PROPERTY(int, tag, Tag, SetTag);
+        PROPERTY(TUnitCategory, category, Category, SetCategory);
+        PROPERTY(int, indUnit, IndUnit, SetIndUnit);
         PROPERTY(bool, isUsed, IsUsed, SetIsUsed).NoSerialization();
 
     )
@@ -386,4 +355,45 @@ TVecVecDouble NormData(double begin, double end, double step, const TVecVecDoubl
 //Глубина должна идти в одном направлении с верху вниз
 TVecVecDouble NormDataNan(double begin, double end, double step, const TVecData& dataVec, double null, const TPtrProgress& progress = TPtrProgress());
 
+
+template<typename TCont>
+TVecData TBaseContainer::FindDataPredThis(const TCont &cont, const TFindPred& pred)
+{
+    TVecData res;
+    for(const auto& child : cont)
+    {
+        if (pred(child))
+            res.emplace_back(child);
+        FindDataPredChild(child, pred, res);
+    }
+    return res;
+}
+
+template<typename TChild>
+void TBaseContainer::FindDataPredChild(const TChild &child, const TFindPred& pred, TVecData& res)
+{
+    if(child->CountChildData() == 0) return;
+    TVecData childRes = child->FindDataPred(pred);
+    if(childRes.size())
+        res.insert(res.end(), childRes.begin(), childRes.end());
+}
+template<typename TCont>
+TPtrData TBaseContainer::FindDataThis(const TVecString &path, size_t pos, const TCont &cont)
+{
+    if(pos < path.size() && name == path[pos])
+        return FindDataChild(path, pos + 1, cont);
+    return TPtrData();
+}
+
+template<typename TCont>
+TPtrData TBaseContainer::FindDataChild(const TVecString &path, size_t pos, const TCont &cont)
+{
+    if(pos < path.size())
+        for(const auto& child : cont)
+        {
+            TPtrData res = child->FindDataPath(path, pos, true);
+            if(res) return res;
+        }
+    return std::dynamic_pointer_cast<TDataBase>(shared_from_this());
+}
 #endif //TESTAPP_DATACONTAINER_H
