@@ -63,6 +63,9 @@ public:
     virtual TPtrData CreateChildData(int t) { return std::make_shared<TDataBase>(); }
     inline TPtrData AddDefChildData(int t = 0) { return AddChildData(CreateChildData(t)); };
 
+    TString Comment() const;
+    void SetComment(const TString& value);
+
     TPtrData FindData(const TString& pathData);
     virtual TPtrData FindDataPath(const TVecString &path, size_t pos, bool isThis);
     virtual TVecData FindDataPred(const TFindPred& pred);
@@ -72,7 +75,7 @@ public:
 protected:
     TWPtrBaseContainer parent;
     TVecData childData;
-
+    TString comment;
     virtual void CallUsed(const TPtrData& value);
 
     template<typename TCont>
@@ -85,6 +88,19 @@ protected:
     template<typename TCont>
     TPtrData FindDataChild(const TVecString &path, size_t pos, const TCont &cont);
 };
+
+template <typename T>
+struct TFindResult{
+    T begin;
+    T end;
+    T res;
+    inline bool IsFound() const { return res != end; }
+    inline bool NotFound() const { return res == end; }
+    inline size_t Index() const { return res - begin; }
+    inline auto Value() const { return *res; }
+};
+
+using TFindResultIter = TFindResult<TVecDouble::const_iterator>;
 
 class TDataBase: public TBaseContainer{
 public:
@@ -137,6 +153,12 @@ public:
     virtual TVecDouble::const_iterator BeginValue(size_t array) const { return TVecDouble::const_iterator(); }
     virtual TVecDouble::const_iterator EndValue(size_t array) const { return TVecDouble::const_iterator(); }
 
+    virtual TVecDouble::iterator BeginValue(size_t array) { return TVecDouble::iterator(); }
+    virtual TVecDouble::iterator EndValue(size_t array) { return TVecDouble::iterator(); }
+
+    TFindResultIter FindLowerKey(double value);
+    TFindResultIter FindUpperKey(double value);
+
     virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
 
     virtual void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, double start, double stop){};
@@ -145,6 +167,7 @@ public:
 
     PROPERTIES_CREATE(TDataBase, TPropertyClass, NO_CREATE(),
         PROPERTY(TVariable, unit, Unit, SetUnit);
+        PROPERTY(TString, comment, Comment, SetComment);
         PROPERTY_READ(size_t, countArray, CountArray);
         PROPERTY(int, tag, Tag, SetTag);
         PROPERTY(TUnitCategory, category, Category, SetCategory);

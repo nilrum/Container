@@ -351,10 +351,11 @@ TResult TLasWriter::Write(const TString &path, const TPtrProgress& progress)
     fprintf(f, "~Curve information\n");
     fprintf(f, "# MNEM.UNIT                    API CODE  CURVE DESCRIPTION\n");
     fprintf(f, "# ====.================================:====================\n");
-    for(const auto c : curveInfos)
+    for(auto& c : curveInfos)
     {
         TString nameUnit = STDFORMAT("%-4s.%s", STR(c.name), STR(c.unit));
         fprintf(f, "  %-36s : %s\n", STR(nameUnit), STR(c.comment));
+        c.norm.nullValue = WellInfoDbl(wiNULL);
     }
     fprintf(f, "~Parameter information block\n");
     fprintf(f, "# MNEM.UNIT                     VALUE       DESCRIPTION\n");

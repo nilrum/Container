@@ -436,19 +436,57 @@ void fft(Iter a, Iter b, int log2n)
         }
     }
 }
+using TVecComp = std::vector<comp>;
+const double PI = std::atan(1.0)*4;
+
+void fft2(TVecComp& v, int invert)
+{
+    size_t n = v.size();
+    if(n == 1) return;
+    TVecComp v1(n / 2);
+    TVecComp v2(v1.size());
+    for(size_t i = 0; i < v1.size(); i++)
+    {
+        v1[i] = v[i * 2];
+        v2[i] = v[i * 2 + 1];
+    }
+    fft2(v1, invert);
+    fft2(v2, invert);
+
+    double ang = 2 * PI  / double(n) * invert;
+    comp w(1);
+    comp wn(std::cos(ang), std::sin(ang));
+    for(size_t i = 0; i < v1.size(); i++)
+    {
+        v[i] = v1[i] + w * v2[i];
+        v[i + v1.size()] = v1[i] - w * v2[i];
+        if(invert == -1)
+        {
+            v[i] = v[i] / 2.;
+            v[i + v1.size()] = v[i + v1.size()] / 2.;
+        }
+        w = w * wn;
+    }
+}
 
 TEST(FFFT, Calc)
 {
-    comp a[] = {
-            {0, 0}, {1, 1}, {3, 3}, {4, 4},
-            {4, 4}, {3, 3}, {1, 1}, {0, 0}
+    TVecComp a = {
+            {0, 0}, {1, 0}, {3, 0}, {4, 0},
+            {4, 0}, {3, 0}, {1, 0}, {0, 0},
+            {0, 0}, {0, 0}, {0, 0}, {0, 0},
+            {0, 0}, {0, 0}, {0, 0}, {0, 0}
     };
-    comp b[8];
-    comp c[8];
-    fft(a, b, 3);
-    EXPECT_NE(b[0].real(), 0.);
-    fft(b, c, 3);
-    EXPECT_EQ(c[0].real(), 0.);
+    TVecComp b(8);
+    TVecComp c(8);
+
+    fft(a.begin(), b.begin(), 3);
+    fft(b.begin(), c.begin(), 3);
+
+    fft2(a, 1);
+    EXPECT_NE(a[0].real(), 0.);
+    fft2(a, -1);
+    EXPECT_EQ(a[0].real(), 0.);
 }
 
 /*

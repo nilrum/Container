@@ -180,6 +180,8 @@ void TDataBase::Assign(const TPtrData &value)
 {
     SetName(value->Name());
     SetUnit(value->Unit());
+    SetComment(value->Comment());
+    SetTag(value->Tag());
     SetCategory(value->Category());
     SetIndUnit(value->IndUnit());
     SetCoefs(value->Coefs());
@@ -216,6 +218,21 @@ TString TDataBase::Title() const
 {
     TString u = Unit();
     return Name() + (u.empty() ? TString() : ("," + u));
+}
+
+TFindResultIter TDataBase::FindLowerKey(double value)
+{
+    TFindResultIter res {BeginKey(), EndKey()};
+    res.res = std::lower_bound(res.begin, res.end, value);
+    if(res.res != res.begin) res.res--;
+    return res;
+}
+
+TFindResultIter TDataBase::FindUpperKey(double value)
+{
+    TFindResultIter res {BeginKey(), EndKey()};
+    res.res = std::upper_bound(res.begin, res.end, value);
+    return res;
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -286,7 +303,8 @@ void TBaseContainer::CallUsed(const TPtrData &value)
 
 TPtrData TBaseContainer::FindData(const TString &pathData)
 {
-    return FindDataPath(Split(pathData, '/'), 0, true);
+    TVecString path = Split(pathData, '/');
+    return FindDataPath(path, 0, path.size() > 1);
 }
 
 TPtrData TBaseContainer::FindDataPath(const TVecString &path, size_t pos, bool isThis)
@@ -312,6 +330,16 @@ const TPtrHeader &TBaseContainer::Header() const
     TPtrBaseContainer par = parent.lock();
     if(par) return par->Header();
     return Single<TPtrHeader>();
+}
+
+TString TBaseContainer::Comment() const
+{
+    return comment;
+}
+
+void TBaseContainer::SetComment(const TString &value)
+{
+    comment = value;
 }
 
 TVecVecDouble NormData(double begin, double end, double step, const TVecVecDouble& data)

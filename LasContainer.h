@@ -58,13 +58,8 @@ public:
 
     void SwapValue(TVecDouble& value) override;
 
-    PROPERTIES(TDataLas, TDataBase,
-        PROPERTY(TString, comment, Comment, SetComment);
-    )
-
-    PROPERTY_FUN(TString, comment, Comment, SetComment);
+    PROPERTIES(TDataLas, TDataBase,)
 protected:
-    TString comment;
     TPtrDepthVector depth;
     TVecDouble values;
 };

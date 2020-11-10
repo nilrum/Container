@@ -76,6 +76,14 @@ struct TNormInfo{
     double CalcValue(double key);
 };
 
+struct TCurveInfo{
+    TString name;
+    TString unit;
+    TString comment;
+    TString frmt;
+    TNormInfo norm;
+};
+
 using TVecNormInfo = std::vector<TNormInfo>;
 
 TVecVecDouble NormLas(TVecNormInfo vec, double begin, double end, double step);
@@ -118,13 +126,6 @@ private:
 
     TString unitDepth = "M";
     std::vector<TVariable> wellInfo;
-    struct TCurveInfo{
-        TString name;
-        TString unit;
-        TString comment;
-        TString frmt;
-        TNormInfo norm;
-    };
     std::vector<TCurveInfo> curveInfos;
     TString defaultValueFrmt = "%11.2f";
     size_t numWrap = 6;

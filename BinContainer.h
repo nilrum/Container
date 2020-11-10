@@ -45,9 +45,9 @@ protected:
 template <typename TValue, typename TKey>
 class TDataBin : public TDataBinProp {
 public:
-    TDataBin(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f) :
+    TDataBin(const TString &n, const TString &u, const TString& c, size_t ov, size_t ok, TPtrBinFile f) :
             offset(ov), offsetKey(ok), file(f)
-    { name = n; unit = u; }
+    { name = n; unit = u; comment = c; }
 
     double Key(size_t index) const override
     {
@@ -137,8 +137,8 @@ protected:
 template <typename TValue, typename TKey, size_t N>
 struct TDataBinN : public TDataBin<TValue, TKey> {
 public:
-    TDataBinN(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f)
-        :TDataBin<TValue, TKey>(n, u, ov, ok, f){}
+    TDataBinN(const TString &n, const TString &u, const TString& c, size_t ov, size_t ok, TPtrBinFile f)
+        :TDataBin<TValue, TKey>(n, u, c, ov, ok, f){}
 
     size_t CountArray() const override { return N; }
 };
@@ -162,8 +162,8 @@ using TCountCoef = std::vector<std::tuple<size_t, double>>;
 template <typename TValue, typename TKey, size_t N>
 struct TDataBinOver : public TDataBinN<TValue, TKey, N>{
 public:
-    TDataBinOver(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TCountCoef& arrayCoef):
-            TDataBinN<TValue, TKey, N>(n, u, ov, ok, f)
+    TDataBinOver(const TString &n, const TString &u, const TString& c, size_t ov, size_t ok, TPtrBinFile f, const TCountCoef& arrayCoef):
+            TDataBinN<TValue, TKey, N>(n, u, c, ov, ok, f)
     {
         coef = TCountCoef(arrayCoef.size());
         for(size_t i = 0; i < coef.size(); i++)
@@ -217,8 +217,8 @@ protected:
 template <typename TValue, typename TKey, size_t N>
 struct TDataBinMark : public TDataBinN<TValue, TKey, N>{
 public:
-    TDataBinMark(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
-            TDataBinN<TValue, TKey, N>(n, u, ov, ok, f), coef(arrayCoef)
+    TDataBinMark(const TString &n, const TString &u, const TString& c, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
+            TDataBinN<TValue, TKey, N>(n, u, c, ov, ok, f), coef(arrayCoef)
     {
         for(size_t i = 0; i < coef.size(); i++)
             coef[i] = coef.back() / coef[i];
@@ -259,8 +259,8 @@ protected:
 template <typename TValue, typename TKey, size_t N, typename TChecker>
 struct TDataBinMarkNull : public TDataBinMark<TValue, TKey, N>, public TChecker{
 public:
-    TDataBinMarkNull(const TString &n, const TString &u, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
-            TDataBinMark<TValue, TKey, N>(n, u, ov, ok, f, arrayCoef){};
+    TDataBinMarkNull(const TString &n, const TString &u, const TString& c, size_t ov, size_t ok, TPtrBinFile f, const TVecDouble & arrayCoef):
+            TDataBinMark<TValue, TKey, N>(n, u, c, ov, ok, f, arrayCoef){};
     double Value(size_t index, int array) const override
     {
         if(TChecker::IsNull(this->file->PtrData(index)))
@@ -344,16 +344,16 @@ TString CheckLast0(const T& value)
     size_t ok = offsetof(TStruct::TDataType, NAME);\
     double coefKey = 1.;//TODO как лучше сделать
 
-#define DOUBLE_LINE_T(NAME, UNIT, DATATYPE, TYPE)\
-    std::make_shared<DATATYPE<TYPE, TKey>>(#NAME, #UNIT, offsetof(TStruct::TDataType, NAME), ok, file)
+#define DOUBLE_LINE_T(NAME, UNIT, COMM, DATATYPE, TYPE)\
+    std::make_shared<DATATYPE<TYPE, TKey>>(#NAME, #UNIT, COMM, offsetof(TStruct::TDataType, NAME), ok, file)
 
-#define DOUBLE_LINE(NAME, UNIT, TYPE) DOUBLE_LINE_T(NAME, UNIT, TDataBin, TYPE)
+#define DOUBLE_LINE(NAME, UNIT, COMM, TYPE) DOUBLE_LINE_T(NAME, UNIT, COMM, TDataBin, TYPE)
 
-#define DOUBLE_LINE_ARRAY(NAME, OFF_NAME, UNIT, TYPE, ALG, COUNT)\
-    std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, offsetof(TStruct::TDataType, OFF_NAME), ok, file)
+#define DOUBLE_LINE_ARRAY(NAME, OFF_NAME, UNIT, COMM, TYPE, ALG, COUNT)\
+    std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, COMM, offsetof(TStruct::TDataType, OFF_NAME), ok, file)
 
-#define DOUBLE_LINE_ARRAY_COEF(NAME, OFF_NAME, UNIT, TYPE, ALG, COUNT, COEF)\
-    std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, offsetof(TStruct::TDataType, OFF_NAME), ok, file, COEF)
+#define DOUBLE_LINE_ARRAY_COEF(NAME, OFF_NAME, UNIT, COMM, TYPE, ALG, COUNT, COEF)\
+    std::make_shared<ALG<TYPE, TKey, COUNT>>(#NAME, #UNIT, COMM, offsetof(TStruct::TDataType, OFF_NAME), ok, file, COEF)
 
 #define COEF(...) TVecDouble{  __VA_ARGS__ }
 #define COUNTCOEF(...) TCountCoef{  __VA_ARGS__ }
