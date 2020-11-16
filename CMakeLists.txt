@@ -3,12 +3,30 @@ project(Container)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CONTAINER_HDR DataContainer.h BinFile.h BinContainer.h Units.h LasContainer.cpp LasContainer.h Las.h
-                    Bin/MID4.h Bin/MIDK04.h Bin/MIDK05.h
+set(CONTAINER_HDR
+        DataContainer.h
+        Units.h
+        SelectLoader.h
+        LasContainer.h
+        Las.h
+        BinFile.h
+        BinContainer.h
+        Bin/MID4.h
+        Bin/MIDK04.h
+        Bin/MIDK05.h
         )
-set(CONTAINER_SRC DataContainer.cpp BinFile.cpp BinContainer.cpp Units.cpp LasContainer.cpp Las.cpp
-                Bin/MID4.cpp Bin/MIDK04.cpp Bin/MIDK05.cpp
-         )
+set(CONTAINER_SRC
+        DataContainer.cpp
+        Units.cpp
+        SelectLoader.cpp
+        LasContainer.cpp
+        Las.cpp
+        BinContainer.cpp
+        BinFile.cpp
+        Bin/MID4.cpp
+        Bin/MIDK04.cpp
+        Bin/MIDK05.cpp
+        )
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 if(NOT TARGET Property)
     if(NOT EXISTS ${PROPERTY_DIR})
