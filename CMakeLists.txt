@@ -26,7 +26,7 @@ set(CONTAINER_SRC
         Bin/MID4.cpp
         Bin/MIDK04.cpp
         Bin/MIDK05.cpp
-        )
+        HistoryContainer.cpp HistoryContainer.h)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 if(NOT TARGET Property)
     if(NOT EXISTS ${PROPERTY_DIR})

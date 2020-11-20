@@ -14,6 +14,7 @@ using TPtrHeader = std::shared_ptr<THeaderBase>;
 
 class TDataBase;
 using TPtrData = std::shared_ptr<TDataBase>;
+using TWPtrData = std::weak_ptr<TDataBase>;
 using TVecData = std::vector<TPtrData>;
 
 enum class TTypeEdit{   NoUpdate = 0,
@@ -127,15 +128,19 @@ public:
     inline double FirstValue(int array = 0) const   { return Value(0, array); }
     inline double LastValue(int array = 0) const    { return Value(CountValue() - 1, array); }
 
-    virtual void Insert(size_t index, const TVecDouble& keyValues, bool isSort){};
+    virtual size_t Insert(size_t index, const TVecDouble& keyValues, bool isSort){ return index; };
     virtual void Delete(size_t index, size_t count) {};
 
-    inline void Insert(size_t index, const TVecDouble& keyValues = TVecDouble()) { Insert(index, keyValues, true); }
+    inline size_t Insert(size_t index, const TVecDouble& keyValues = TVecDouble()) { return Insert(index, keyValues, true); }
     inline void Delete(size_t index)                { Delete(index, 1); };
     inline void Add(const TVecDouble& keyValues, bool isSort = false) { Insert(CountValue(), keyValues, isSort); }
 
-    virtual TResult Load(FILE* file) { return TResult(); };
-    virtual TResult Save(FILE* file) { return TResult(); };
+    virtual TResult Load(FILE* file, int index, size_t count) { return TResult(); };
+    virtual TResult Save(FILE* file, int index, size_t count) { return TResult(); };
+
+    inline TResult Load(FILE* file){ return Load(file, -1, 0); }
+    inline TResult Save(FILE* file){ return Save(file, -1, 0); }
+
 
     virtual TVecString DefaultTitles() const{ return TVecString(); }
     virtual TVecString DefaultEnumTypes() const{ return TVecString(); }
