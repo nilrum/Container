@@ -7,6 +7,7 @@ set(CONTAINER_HDR
         DataContainer.h
         Units.h
         SelectLoader.h
+        HistoryContainer.h
         LasContainer.h
         Las.h
         BinFile.h
@@ -14,19 +15,25 @@ set(CONTAINER_HDR
         Bin/MID4.h
         Bin/MIDK04.h
         Bin/MIDK05.h
+        Bin/MIDK06.h
+        Bin/MIDK07.h
         )
 set(CONTAINER_SRC
         DataContainer.cpp
         Units.cpp
         SelectLoader.cpp
+        HistoryContainer.cpp
         LasContainer.cpp
         Las.cpp
         BinContainer.cpp
         BinFile.cpp
+        Bin/MIDHeader.h
         Bin/MID4.cpp
         Bin/MIDK04.cpp
         Bin/MIDK05.cpp
-        HistoryContainer.cpp HistoryContainer.h)
+        Bin/MIDK06.cpp
+        Bin/MIDK07.cpp
+        )
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 if(NOT TARGET Property)
     if(NOT EXISTS ${PROPERTY_DIR})

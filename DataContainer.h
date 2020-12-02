@@ -135,12 +135,11 @@ public:
     inline void Delete(size_t index)                { Delete(index, 1); };
     inline void Add(const TVecDouble& keyValues, bool isSort = false) { Insert(CountValue(), keyValues, isSort); }
 
-    virtual TResult Load(FILE* file, int index, size_t count) { return TResult(); };
+    virtual TResult Load(FILE* file, int index, size_t count, bool isReplace) { return TResult(); };
     virtual TResult Save(FILE* file, int index, size_t count) { return TResult(); };
 
-    inline TResult Load(FILE* file){ return Load(file, -1, 0); }
+    inline TResult Load(FILE* file){ return Load(file, -1, 0, false); }
     inline TResult Save(FILE* file){ return Save(file, -1, 0); }
-
 
     virtual TVecString DefaultTitles() const{ return TVecString(); }
     virtual TVecString DefaultEnumTypes() const{ return TVecString(); }
@@ -237,6 +236,7 @@ public:
 
     virtual TPtrHeader Clone() = 0;
     virtual TString Version() const = 0;
+    virtual void SetVersion(const TString& value){}
 
     virtual TString TitleInfo(size_t index) const;
     virtual TVariable Info(size_t  index) const = 0;
@@ -267,6 +267,8 @@ public:
 
     bool IsValid() const;
 
+    TString Version() const;
+
     const TPtrHeader& Header() const override;
     void SetHeader(const TPtrHeader& value);
 
@@ -293,9 +295,24 @@ public:
     static const TPtrRegHeader& RegHeader(int index);
 
     static TPtrHeader FindHeader(const TString& version);
+
+    PROPERTIES(TContainer, TBaseContainer,
+        PROPERTY(TString, version, Version, SetVersion);
+        PROPERTY_CALL(TString, area, Info, SetInfo, iiArea);
+        PROPERTY_CALL(TString, well, Info, SetInfo, iiWell);
+        PROPERTY_CALL(TString, date, Info, SetInfo, iiDate);
+        PROPERTY_CALL(TString, time, Info, SetInfo, iiTime);
+        PROPERTY_CALL(double, beginDepth, InfoDouble, SetInfoDouble, iiBegin);
+        PROPERTY_CALL(double, endDepth, InfoDouble, SetInfoDouble, iiEnd);
+        PROPERTY_CALL(double, stepDepth, InfoDouble, SetInfoDouble, iiStep);
+        PROPERTY_CALL(TString, company, Info, SetInfo, iiCompany);
+        PROPERTY_CALL(TString, service, Info, SetInfo, iiServComp);
+    )
+
 protected:
     TPtrHeader header;
     static TVecHeader& Headers(){ static TVecHeader headers; return headers; }
+    void SetVersion(const TString& value);
 };
 
 using TPtrContainer = std::shared_ptr<TContainer>;

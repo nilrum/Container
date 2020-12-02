@@ -1,18 +1,20 @@
 //
-// Created by user on 27.02.2020.
+// Created by user on 30.11.2020.
 //
 
-#ifndef NEO_MIDK04_H
-#define NEO_MIDK04_H
+#ifndef NEO_MIDK06_H
+#define NEO_MIDK06_H
+
+
 
 #include "MIDHeader.h"
 
 #pragma pack (push, 1) //byte alignment
 
-struct THeaderMIDK04{
+struct THeaderMIDK06{
     char Text[508];			//Text description
     char EndAscHead[4];		//Must be equal to: ~ASC
-    char Ver[12];			//Format version, must be equal to: MIDK04
+    char Ver[12];			//Format version, must be equal to: MIDK06 MID-V1.1 MID-V1.0
     char Customer[40];		//Customer
     char Area[40];			//Area
     char Well[10];			//Well
@@ -50,38 +52,38 @@ struct THeaderMIDK04{
     char EndBinHead[4];		//Must be equal to: ~BIN
 };
 
-const int CountOneKus_MIDK_04 = 15;
-const int CountOthKus_MIDK_04 = 54;
-const int CountSpad_MIDK_04 = 6;
+const int Count_MIDK_06_Zond = 5;
+const int Count_MIDK_06_Zader = 54;
 
-struct TDataMIDK04{//Мид-К для определения третьей колонны
+struct TDataMIDK06{//Мид-К 276 слов 120 градусов
     float Depth;            //глубина в метрах
-    float Speed;            //скорость каротажа в данной точке
+    float Speed;            //скорость каротажа в данной точке в м/сек
     float Time;             //время между кадрами в миллисекундах
-    unsigned short MM;      //магнитная метка
-    unsigned short NumMid;  //номер модуля МИД
-    unsigned short GR;      //данные ГК
-    short IS;               //ток генераторной катушки короткого зонда
-    short IL;               //ток длинного зонда
+    unsigned short MM;   	//магнитная метка
+    short IGenKat;          //ток генераторной катушки
     short TOut;             //внешний термометр
     short TIn;              //внутренний термометр
-    short Press;		    //манометр
-    short TN;               //натяжение кабеля
+    unsigned short GR;      //данные ГК
+    unsigned short NumMid;  //номер модуля МИД
+    unsigned short NumGR;   //номер модуля ГК
     unsigned short Rezerv[10];  //резерв
-    short ZS1[CountOneKus_MIDK_04];           //продольный зонд ZS1 (КУС=1)
-    short ZS2[CountOthKus_MIDK_04];           //продольный зонд ZS2 (КУС=25)
-    short ZS3[CountOthKus_MIDK_04];           //продольный зонд ZS3 (КУС=250)
-    short ZL1[CountOneKus_MIDK_04];           //продольный зонд ZL1 (КУС=1)
-    short ZL2[CountOthKus_MIDK_04];           //продольный зонд ZL2 (КУС=25)
-    short ZL3[CountOthKus_MIDK_04];           //продольный зонд ZL3 (КУС=250)
+    short Zonds[Count_MIDK_06_Zader][Count_MIDK_06_Zond];        //продольный зонд Z1,Z2,Z3 и поперечный зонд X,Y
 };
+
 
 #pragma pack (pop)
 
-class TMIDK04Format : public TMIDFileTemp<THeaderMIDK04, TDataMIDK04>{
+class TMIDK06Format : public TMIDFileTemp<THeaderMIDK06, TDataMIDK06>{
 public:
-    TMIDK04Format():TMIDFileTemp<THeaderMIDK04, TDataMIDK04>("MIDK04"){}
+    TMIDK06Format():TMIDFileTemp<THeaderMIDK06, TDataMIDK06>("MIDK06"){}
 
+protected:
+    virtual bool CheckTextVersionHeader(const THeaderMIDK06& h)
+    {
+        return ::CheckTextVersion(h, version) || TString(h.Ver) == TString("MID-V1.1") || TString(h.Ver) == TString("MID-V1.0") ;
+    }
 };
 
-#endif //NEO_MIDK04_H
+
+
+#endif //NEO_MIDK06_H

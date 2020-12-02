@@ -5,7 +5,7 @@
 #ifndef TESTAPP_MID4_H
 #define TESTAPP_MID4_H
 
-#include "BinFile.h"
+#include "MIDHeader.h"
 
 #pragma pack (push, 1) //byte alignment
 
@@ -94,16 +94,10 @@ struct TDataMID4{
 };
 #pragma pack (pop)
 
-class TMID4Format : public TBinFileTemp<THeaderMID4, TDataMID4>{
+class TMID4Format : public TMIDFileTemp<THeaderMID4, TDataMID4>{
 public:
-    TMID4Format():TBinFileTemp<THeaderMID4, TDataMID4>("MID4BK"){}
+    TMID4Format():TMIDFileTemp<THeaderMID4, TDataMID4>("MID4BK"){}
 };
-
-template <>
-bool CheckHeader<THeaderMID4>(const THeaderMID4& value, const TString& check)
-{
-    return TString(value.Ver) == check && value.LenRec == sizeof(TDataMID4);
-}
 
 
 #endif //TESTAPP_MID4_H

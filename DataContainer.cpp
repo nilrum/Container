@@ -10,6 +10,11 @@ TContainer::TContainer(const TPtrHeader &value):header(value)
 
 }
 
+TString TContainer::Version() const
+{
+    return header->Version();
+}
+
 bool TContainer::IsValid() const
 {
     return static_cast<bool>(header);
@@ -142,6 +147,11 @@ bool TContainer::IsUp() const
     return false;
 }
 
+void TContainer::SetVersion(const TString &value)
+{
+    header->SetVersion(value);
+}
+
 TVecString THeaderBase::InitDefTitle()
 {
     return {"Area", "Well", "Date", "Time", "Begin depth", "End depth", "Step depth", "Company", "Service company"};
@@ -211,7 +221,7 @@ void TDataBase::SetUnit(const TVariable &value)
     if(category == ucNone)
         unit = value.ToString();
     else
-        indUnit = value.GetEnum().Index();
+        indUnit = int(value.GetEnum().Index());
 }
 
 TString TDataBase::Title() const

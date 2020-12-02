@@ -28,31 +28,33 @@ VAR_LIST(
         SET_INFO(iiServComp, Copy(h.Operator, value))
     ),
 VAR_LIST(
-    KEY_LINE(Depth, float, TMIDK04Format);
-    Add(res, DOUBLE_LINE(GR, API, "GR", unsigned short))
-        ->CLB(float, KoefGRExtA, KoefGRExtB, ucGR)->SetKeyDelta(0.9);
+    KEY_LINE(Depth, float);
+    ADD(DOUBLE_LINE(GR, API, "GR", unsigned short))
+        ->CLB(float, CoefGRExtA, CoefGRExtB, ucGR)->SetKeyDelta(0.9);
 
-    Add(res, DOUBLE_LINE(IS, mA, "", short))
-        ->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(1.948);
+    ADD(DOUBLE_LINE(IS, mA, "", short))
+        ->CLB(float, CoefIA, CoefIB, ucCurrent)->SetKeyDelta(1.948);
 
-    Add(res, DOUBLE_LINE(IL, mA, "", short))
-        ->CLB(float, KoefTokA, KoefTokB, ucCurrent)->SetKeyDelta(2.340);
+    ADD(DOUBLE_LINE(IL, mA, "", short))
+        ->CLB(float, CoefIA, CoefIB, ucCurrent)->SetKeyDelta(2.340);
 
-    Add(res, DOUBLE_LINE(TOut, C, "", short))
-    ->CLB(float, KoefTOutA, KoefTOutB, ucTemp)->SetKeyDelta(2.845);
+    ADD(DOUBLE_LINE(TOut, C, "", short))
+        ->CLB(float, CoefTOutA, CoefTOutB, ucTemp)->SetKeyDelta(2.845);
 
-    Add(res, DOUBLE_LINE(TIn, C, "", short))
-    ->CLB(float, KoefTinA, KoefTinB, ucTemp)->SetKeyDelta(1.620);
+    ADD(DOUBLE_LINE(TIn, C, "", short))
+        ->CLB(float, CoefTInA, CoefTInB, ucTemp)->SetKeyDelta(1.620);
 
-    Add(res, DOUBLE_LINE(Press, atm, "", short))
-    ->CLB(float, KoefManA, KoefManB, ucPress)->SetKeyDelta(1.330);
+    ADD(DOUBLE_LINE(Press, atm, "", short))
+        ->CLB(float, CoefPressA, CoefPressB, ucPress)->SetKeyDelta(1.330);
 
-    Add(res, DOUBLE_LINE_ARRAY_COEF(ZS, ZS1, raw, "", short,
-        TDataBinOver, 54, COUNTCOEF({15, 250.}, {54, 10.}, {54, 1.})))
+    ADD(DOUBLE_LINE_ARRAY(ZS, ZS1, raw, "", short,
+        TDataBinOver, 54))
+        ->SetCoef({{15, 250.}, {54, 10.}, {54, 1.}})
         ->SetKeyDelta(1.948);
 
-    Add(res, DOUBLE_LINE_ARRAY_COEF(ZL, ZL1, raw, "", short,
-        TDataBinOver, 54, COUNTCOEF({15, 250.}, {54, 10.}, {54, 1.})))
+    ADD(DOUBLE_LINE_ARRAY(ZL, ZL1, raw, "", short,
+        TDataBinOver, 54))
+        ->SetCoef({{15, 250.}, {54, 10.}, {54, 1.}})
         ->SetKeyDelta(2.340);
     )
 )

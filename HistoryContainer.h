@@ -20,18 +20,39 @@ private:
     TVecDouble insVals;
 };
 
-class THistoryDeleteData : public THistoryItem{
+class THistoryFile : public THistoryItem{
+public:
+    THistoryFile();
+    ~THistoryFile();
+
+protected:
+    TString PathHistory(size_t index = 0) const;
+    size_t CountPaths() const;
+    TString AddPath();
+private:
+    TVecString pathHistory;
+};
+
+class THistoryDeleteData : public THistoryFile{
 public:
     THistoryDeleteData(const TPtrData& value, size_t index, size_t count);
-    ~THistoryDeleteData();
+    void Back() override;
+    void Next() override;
+
+protected:
+    TWPtrData data;
+    size_t indexChg;
+    size_t countChg;
+};
+
+class THistoryValueEditInterval : public THistoryDeleteData{
+public:
+    THistoryValueEditInterval(const TPtrData& value, size_t index, size_t count);
     void Back() override;
     void Next() override;
 
 private:
-    TWPtrData data;
-    size_t indexChg;
-    size_t countChg;
-    TString pathHistory;
+    void BackNext(size_t load);
 };
 
 class THistoryDataEdit : public THistoryItem{

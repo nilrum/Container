@@ -28,27 +28,49 @@ void THistoryAddData::Next()
     lock->OnEdited(TTypeEdit::FullUpdate);
 }
 //----------------------------------------------------------------------------------------------------------------------
+THistoryFile::THistoryFile()
+{
+    AddPath();
+}
 
-THistoryDeleteData::THistoryDeleteData(const TPtrData &value, size_t index, size_t count):
+THistoryFile::~THistoryFile()
+{
+    for(const auto& p : pathHistory)
+        std::remove(STR(p));//файл истории удалить после себя
+}
+
+TString THistoryFile::PathHistory(size_t index) const
+{
+    return pathHistory[index];
+}
+
+size_t THistoryFile::CountPaths() const
+{
+    return pathHistory.size();
+}
+
+TString THistoryFile::AddPath()
+{
+    pathHistory.push_back("D:/History/" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    return pathHistory.back();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+THistoryDeleteData::THistoryDeleteData(const TPtrData &value, size_t index, size_t count):THistoryFile(),
         data(value), indexChg(index), countChg(count)
 {
     name = "Interval data removed";
-    pathHistory = "D:/History/" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
-    auto file = OpenFile(pathHistory, TOpenFileMode::Write);
-    value->Save(file.get(), index, count);
-}
 
-THistoryDeleteData::~THistoryDeleteData()
-{
-    std::remove(STR(pathHistory));//файл истории удалить после себя
+    auto file = OpenFile(PathHistory(), TOpenFileMode::Write);
+    value->Save(file.get(), index, count);
 }
 
 void THistoryDeleteData::Back()
 {
     if(data.expired()) return;
     auto lock = data.lock();
-    auto file = OpenFile(pathHistory, TOpenFileMode::Read);
-    lock->Load(file.get(), indexChg, countChg);
+    auto file = OpenFile(PathHistory(), TOpenFileMode::Read);
+    lock->Load(file.get(), indexChg, countChg, false);
     lock->OnEdited(TTypeEdit::UpdateViews);
 }
 
@@ -59,6 +81,37 @@ void THistoryDeleteData::Next()
     lock->Delete(indexChg, countChg);
     lock->OnEdited(TTypeEdit::UpdateViews);
 }
+//----------------------------------------------------------------------------------------------------------------------
+THistoryValueEditInterval::THistoryValueEditInterval(const TPtrData &value, size_t index, size_t count):
+    THistoryDeleteData(value, index, count)
+{
+    name = "Interval data changed";
+}
+
+void THistoryValueEditInterval::Back()
+{
+    BackNext(0);
+}
+
+void THistoryValueEditInterval::Next()
+{
+    BackNext(1);
+}
+
+void THistoryValueEditInterval::BackNext(size_t load)
+{
+    if(data.expired()) return;
+    auto lock = data.lock();
+    if(CountPaths() == 1)
+    {//сохраняем текущие данные
+        auto file = OpenFile(AddPath(), TOpenFileMode::Write);
+        lock->Save(file.get(), indexChg, countChg);//TODO проверки сохранения не реализованны
+    }
+    auto file = OpenFile(PathHistory(load), TOpenFileMode::Read);
+    lock->Load(file.get(), indexChg, countChg, true);
+    lock->OnEdited(TTypeEdit::UpdateViews);
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 THistoryDataEdit::THistoryDataEdit(const TPtrData &value, size_t index, size_t array):data(value), indexChg(index), indArray(array)
 {

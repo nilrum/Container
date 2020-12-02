@@ -5,14 +5,14 @@
 #ifndef NEO_MIDK05_H
 #define NEO_MIDK05_H
 
-#include "BinFile.h"
+#include "MIDHeader.h"
 
 #pragma pack (push, 1) //byte alignment
 struct THeaderMIDK05{//шапка МИД-К 2006,2007 но расширена в техже размерах
     char Data[508];
     char EndAscHead[4];     //~ASC
     char Ver[12];           //версия формата записи
-    char Zakaz[40];         //заказчик
+    char Customer[40];         //заказчик
     char Area[40];         //площадь
     char Well[10];          //скважина
     char Date[11];          //дата каротажа
@@ -28,25 +28,25 @@ struct THeaderMIDK05{//шапка МИД-К 2006,2007 но расширена в
     short Rezerv2[3];
     float CountOK;          //кол-во нормальных кадров
     float CountBad;         //кол-во сбойных кадров не записанных в файл
-    float KoefTokB;       	//коэффициент линейной зависимости тока
-    float KoefTokA;       	//коэффициент линейной зависимости тока
-    float KoefTinB;      	//коэффициент линейной зависимости внутреннего термометра
-    float KoefTinA;      	//коэффициент линейной зависимости внутреннего термометра
-    float KoefGR;           //коэффициент линейной зависимости ГК, по результатам базовой калибровки ГК y=ax+b, где b=0, KoefGR=a
+    float CoefIB;     //коэффициент линейной зависимости тока
+    float CoefIA;     //коэффициент линейной зависимости тока
+    float CoefTInB;      	//коэффициент линейной зависимости внутреннего термометра
+    float CoefTInA;      	//коэффициент линейной зависимости внутреннего термометра
+    float CoefGR;           //коэффициент линейной зависимости ГК, по результатам базовой калибровки ГК y=ax+b, где b=0, CoefGR=a
     short Rezerv3;
-    float KoefTNB;        	//коэффициент калибровки натяжения
-    float KoefTNA;        	//коэффициент калибровки натяжения
-    float KoefTOutA;      	//коэффициент калибровки внешнего термометра
-    float KoefTOutB;      	//коэффициент калибровки внешнего термометра
+    float CoefTNB;        	//коэффициент калибровки натяжения
+    float CoefTNA;        	//коэффициент калибровки натяжения
+    float CoefTOutA;      	//коэффициент калибровки внешнего термометра
+    float CoefTOutB;      	//коэффициент калибровки внешнего термометра
     short Rezerv4;
-    float KoefGRExtA;     	//полный коэф ГК
-    float KoefGRExtB;     	//полный коэф ГК
-    float KoefManA;       //калибровка манометра
-    float KoefManB;       //калибровка манометра
-    float KoefTokExtA;    //дополнительная калибровка тока
-    float KoefTokExtB;    //дополнительная калибровка тока
+    float CoefGRExtA;     	//полный коэф ГК
+    float CoefGRExtB;     	//полный коэф ГК
+    float CoefPressA;       //калибровка манометра
+    float CoefPressB;       //калибровка манометра
+    float CoefIExtA;  //дополнительная калибровка тока
+    float CoefIExtB;  //дополнительная калибровка тока
     char Rezerv5[265];       //резерв
-    char EndBinHead[4];     //~BIN
+    char EndBinHead[4];      //~BIN
 };
 
 const int CountSpad_MIDK_05 = 8;
@@ -82,16 +82,10 @@ struct TDataMIDK05{//плюс малый зонд еще
 
 #pragma pack (pop)
 
-class TMIDK05Format : public TBinFileTemp<THeaderMIDK05, TDataMIDK05>{
+class TMIDK05Format : public TMIDFileTemp<THeaderMIDK05, TDataMIDK05>{
 public:
-    TMIDK05Format():TBinFileTemp<THeaderMIDK05, TDataMIDK05>("MIDK05"){}
+    TMIDK05Format():TMIDFileTemp<THeaderMIDK05, TDataMIDK05>("MIDK05"){}
 };
-
-template <>
-bool CheckHeader<THeaderMIDK05>(const THeaderMIDK05& value, const TString& check)
-{
-    return TString(value.Ver) == check && value.LenRec == sizeof(TDataMIDK05);
-}
 
 
 #endif //NEO_MIDK05_H
