@@ -15,7 +15,6 @@ HEADER_BIN(THeaderBinMIDK07, THeaderBin, TMIDK07Format,
                    INFO(iiTime, h.TimeBeg)
                    INFO(iiBegin, h.DepthBeg)
                    INFO(iiEnd, h.DepthEnd)
-                   INFO(iiStep, 0.0)
                    INFO(iiServComp, DosToUtf8(h.Operator))
            ),
            VAR_LIST(

@@ -11,6 +11,9 @@ void TSelectLoader::SetContainer(const TPtrContainer& value, const TString& path
     cont = value;
     loadable = cont->Header()->LoadableData(path);
     SetIsSelected(true);
+    beforeStep = cont->InfoDouble(iiStep);
+    if(beforeStep == 0)
+        cont->SetInfoDouble(iiStep, TUnits::Customs()->CurProfile()->DefaultStep());
 }
 
 TResult TSelectLoader::Select(const TPtrProgress& progress)
@@ -40,6 +43,11 @@ void TSelectLoader::SetIsSelected(bool value)
 {
     for(const auto& v : loadable)
         v->SetIsUsedNoCall(value);
+}
+
+bool TSelectLoader::IsStepChanged() const
+{
+    return beforeStep != cont->InfoDouble(iiStep);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

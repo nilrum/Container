@@ -29,6 +29,8 @@ public:
 
     bool IsSelected() const;
     void SetIsSelected(bool value);
+
+    bool IsStepChanged() const;
 protected:
     TPtrContainer cont;
     TVecData loadable;
@@ -36,6 +38,7 @@ protected:
     double begin = NAN;
     double end = NAN;
     double step = NAN;
+    double beforeStep = 0.;
     friend class TPropertyLoader;
 };
 

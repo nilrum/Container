@@ -24,7 +24,6 @@ VAR_LIST(
            INFO(iiTime, CheckLast0(h.TimeBeg))
            INFO(iiBegin, h.DepthBeg)
            INFO(iiEnd, h.DepthEnd)
-           INFO(iiStep, 0.0)
            INFO(iiCompany, DosToUtf8(CheckLast0(h.Customer)))
            INFO(iiServComp, DosToUtf8(CheckLast0(h.Operator)))
            ),

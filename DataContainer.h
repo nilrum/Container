@@ -22,6 +22,8 @@ enum class TTypeEdit{   NoUpdate = 0,
                         UpdateDataValues = 2,
                         UpdateData = UpdateDataKey | UpdateDataValues,
                         UpdateViews = 4,
+                        UpdateKeyViews = UpdateDataKey | UpdateViews,
+                        UpdateValuesViews = UpdateDataValues | UpdateViews,
                         FullUpdate = UpdateData | UpdateViews };
 
 constexpr bool operator & (TTypeEdit lhs, TTypeEdit rhs) { return static_cast<int>(lhs) & static_cast<int>(lhs); }

@@ -18,6 +18,7 @@ public:
     TResult LoadData(const TVecData& datas, const TPtrProgress& progress) override;       //загружаем список кривых
 
 protected:
+    std::map<int, TVariable> otherHeaderValue;
     std::function<TPtrBinFile()> createFile;
     void Copy(char* ptr, const TVariable& value);
     void Copy(float& ptr, const TVariable& value);
@@ -381,7 +382,7 @@ TString CheckLast0(const T& value)
             const TFormat::THeaderType& h = *((TFormat::THeaderType*)(file->PtrHeader()));\
             switch (index){\
                 INFO\
-                default: return TString();\
+                default: return otherHeaderValue.count(index) ? otherHeaderValue.at(index) : TVariable();\
             }\
         }\
         void SetInfo(size_t  index, const TVariable& value) override\
@@ -389,7 +390,8 @@ TString CheckLast0(const T& value)
             if(file.get() == nullptr) return;\
             TFormat::THeaderType& h = *((TFormat::THeaderType*)file->PtrHeader());\
             switch (index){\
-                SET_INFO\
+                SET_INFO                                                      \
+                default: otherHeaderValue[index] = value;                     \
                 }\
         }\
         TVecData LoadableData(const TString& path) override\
