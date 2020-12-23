@@ -16,11 +16,6 @@ TResult THeaderBin::CheckFile(const TString &path)
     return createFile()->CheckVersion(path);
 }
 
-void THeaderBin::Copy(char* ptr, const TVariable& value)
-{
-    strcpy(ptr, value.ToString().c_str());
-}
-
 void THeaderBin::Copy(float& ptr, const TVariable& value)
 {
     ptr = float(value.ToDouble());

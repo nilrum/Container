@@ -20,7 +20,11 @@ public:
 protected:
     std::map<int, TVariable> otherHeaderValue;
     std::function<TPtrBinFile()> createFile;
-    void Copy(char* ptr, const TVariable& value);
+    template <typename T, size_t Size>
+    void Copy(T (&desc)[Size], const TVariable& value)
+    {
+        SafeCopyChar(desc, value.ToString());
+    }
     void Copy(float& ptr, const TVariable& value);
     template<typename TCont, typename T>
     const T& Add(TCont& rez, const T& value, size_t offsetKey, const TPtrBinFile& file)
@@ -229,8 +233,9 @@ public:
 
     auto SetCoef(const TVecDouble & arrayCoef)
     {
+        coef.resize(arrayCoef.size());
         for(size_t i = 0; i < coef.size(); i++)
-            coef[i] = coef.back() / coef[i];
+            coef[i] = arrayCoef.back() / arrayCoef[i];
         return this;
     }
     double Value(size_t index, int array) const override
@@ -339,14 +344,6 @@ TString DosToUtf8(const TString& dos);
 TString Cp866ToCp1251(const TString& dos);
 TString Cp1251ToUt8(const TString& val);
 
-template<typename T>
-TString CheckLast0(const T& value)
-{
-    TString res(value);
-    if(res.size() > std::size(value)) res.resize(std::size(value));
-    return res;
-}
-
 #define OFFSET(NAME) offsetof(TFormat::TDataType, NAME)
 
 #define KEY_LINE(NAME, TYPE)\
@@ -370,7 +367,7 @@ TString CheckLast0(const T& value)
 #define CLB(TYPE, KA, KB, ENUM) SetClb(HEADER_CLB(TYPE, KA), HEADER_CLB(TYPE, KB), TUnitCategory::ENUM)
 
 
-#define HEADER_BIN(TYPE_HEADER, BASE_HEADER, FORMAT, INFO, SET_INFO, LOADABLE)\
+#define HEADER_BIN(TYPE_HEADER, BASE_HEADER, FORMAT, INFO, LOADABLE)\
     class TYPE_HEADER : public BASE_HEADER{\
     public:                                                                   \
         using TFormat = FORMAT;                                                \
@@ -387,12 +384,7 @@ TString CheckLast0(const T& value)
         }\
         void SetInfo(size_t  index, const TVariable& value) override\
         {\
-            if(file.get() == nullptr) return;\
-            TFormat::THeaderType& h = *((TFormat::THeaderType*)file->PtrHeader());\
-            switch (index){\
-                SET_INFO                                                      \
-                default: otherHeaderValue[index] = value;                     \
-                }\
+            otherHeaderValue[index] = value;\
         }\
         TVecData LoadableData(const TString& path) override\
         {\
@@ -413,8 +405,8 @@ TString CheckLast0(const T& value)
 
 
 #define VAR_LIST(...) __VA_ARGS__
-#define INFO(INDEX, RET) case INDEX: return RET;
-#define SET_INFO(INDEX, VAL) case INDEX: VAL; break;
+#define INFO(INDEX, RET) case INDEX: { if(otherHeaderValue.count(INDEX) == 0) return RET; return otherHeaderValue.at(INDEX); }
+#define SET_INFO(INDEX, VAL) case INDEX: { otherHeaderValue[INDEX] = value; break; }
 
 
 

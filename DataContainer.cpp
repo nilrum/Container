@@ -245,6 +245,14 @@ TFindResultIter TDataBase::FindUpperKey(double value)
     return res;
 }
 
+void TDataBase::ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, double start, double stop,
+                                   double oldDelta, double oldScale)
+{
+    ScaleDeltaKey(scale, delta, typeEdit,   std::isnan(start) ? -1 : FindLowerKey(start).Index(),
+                                            std::isnan(stop) ? -1 : FindUpperKey(stop).Index(),
+                                            oldDelta, oldScale);
+}
+
 //---------------------------------------------------------------------------------------------------------------
 TString TBaseContainer::FullName() const
 {

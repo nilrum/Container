@@ -81,15 +81,6 @@ HEADER_BIN(THeaderBinMIDK06, THeaderBin, TMIDK06Format,
                    INFO(iiServComp, DosToUtf8(h.Operator))
            ),
            VAR_LIST(
-                   SET_INFO(iiArea,    Copy(h.Area, value))
-                   SET_INFO(iiWell,    Copy(h.Well, value))
-                   SET_INFO(iiDate,    Copy(h.Date, value))
-                   SET_INFO(iiTime,    Copy(h.TimeBeg, value))
-                   SET_INFO(iiBegin,   Copy(h.DepthBeg, value))
-                   SET_INFO(iiEnd,     Copy(h.DepthEnd, value))
-                   SET_INFO(iiServComp, Copy(h.Operator, value))
-           ),
-           VAR_LIST(
                    KEY_LINE(Depth, float);
                    ADD(DOUBLE_LINE(GR, API, "GR", unsigned short))
                            ->CLB(float, CoefGRExtA, CoefGRExtB, ucGR)->SetKeyDelta(0.9);
@@ -103,12 +94,12 @@ HEADER_BIN(THeaderBinMIDK06, THeaderBin, TMIDK06Format,
                    ADD(DOUBLE_LINE(TIn, C, "", short))
                            ->CLB(float, CoefTInA, CoefTInB, ucTemp)->SetKeyDelta(1.620);
 
-                   ADD(DOUBLE_LINE_ARRAY(ZL, Zonds, "raw", "", short, TDataBinMergedOver, 54))
+                   ADD(DOUBLE_LINE_ARRAY(ZL, Zonds, raw, "", short, TDataBinMergedOver, 54))
                            ->SetCoef({{0, 250.}, {1, 10.}, {2, 1.}});
 
-                   ADD(DOUBLE_LINE_ARRAY(TX, Zonds, "raw", "", short, TDataBinMerged, 54))
+                   ADD(DOUBLE_LINE_ARRAY(TX, Zonds, raw, "", short, TDataBinMerged, 54))
                         ->SetIndMerged(3);
-                   ADD(DOUBLE_LINE_ARRAY(TY, Zonds, "raw", "", short, TDataBinMerged, 54))
+                   ADD(DOUBLE_LINE_ARRAY(TY, Zonds, raw, "", short, TDataBinMerged, 54))
                            ->SetIndMerged(3);
            )
 )

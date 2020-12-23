@@ -138,13 +138,23 @@ protected:
 };
 
 template<typename T>
-TString SafeChar(const T& value)
+TString SafeCharString(const T& value)
 {
     size_t s = std::size(value);
     TString res(value);
     if(res.size() > s) res.resize(s);
     return res;
 };
+
+template <typename T, size_t Size>
+void SafeCopyChar(T (&desc)[Size], const TString& src)
+{
+    size_t s = std::size(desc);
+    if(src.size() < s)
+        strcpy(desc, src.c_str());
+    else
+        strncpy(desc, src.c_str(), s - 1);
+}
 
 
 #endif //TESTAPP_BINFILE_H

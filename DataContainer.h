@@ -29,7 +29,7 @@ enum class TTypeEdit{   NoUpdate = 0,
 constexpr bool operator & (TTypeEdit lhs, TTypeEdit rhs) { return static_cast<int>(lhs) & static_cast<int>(lhs); }
 constexpr TTypeEdit operator | (TTypeEdit lhs, TTypeEdit rhs) { return static_cast<TTypeEdit>(static_cast<int>(lhs) | static_cast<int>(lhs)); }
 
-constexpr bool IsEditValues(TTypeEdit value) { return value & TTypeEdit::UpdateData; }
+constexpr bool IsEditData(TTypeEdit value) { return value & TTypeEdit::UpdateData; }
 constexpr bool IsEditViews(TTypeEdit value) { return value & TTypeEdit::UpdateViews; }
 
 using TOnDataEdit = sigslot::signal<TTypeEdit>;
@@ -101,9 +101,11 @@ struct TFindResult{
     inline bool NotFound() const { return res == end; }
     inline size_t Index() const { return res - begin; }
     inline auto Value() const { return *res; }
+
+    inline size_t Size() const { return end - begin; }
 };
 
-using TFindResultIter = TFindResult<TVecDouble::const_iterator>;
+using TFindResultIter = TFindResult<TVecDouble::iterator>;
 
 class TDataBase: public TBaseContainer{
 public:
@@ -153,6 +155,9 @@ public:
     inline double at(int index) const { return Key(index); }
 
     //если есть возможность отдает указатель на данные напрямую
+    virtual TVecDouble::iterator BeginKey() { return TVecDouble::iterator(); }
+    virtual TVecDouble::iterator EndKey() { return TVecDouble::iterator(); }
+
     virtual TVecDouble::const_iterator BeginKey() const { return TVecDouble::const_iterator(); }
     virtual TVecDouble::const_iterator EndKey() const { return TVecDouble::const_iterator(); }
 
@@ -167,8 +172,13 @@ public:
 
     virtual void SwapValue(TVecDouble& value){};//TODO подумать над необходимстью
 
-    virtual void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, double start, double stop){};
-    inline void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit){ ApplyScaleDeltaKey(scale, delta, typeEdit, NAN, NAN); }
+    virtual void ScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, int indStart, int indStop, double oldDelta, double oldScale){};
+    inline void ScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, int indStart = -1, int indStop = -1)
+    {
+        ScaleDeltaKey(scale, delta, typeEdit, indStart, indStop, 0, 1);
+    }
+
+    void ApplyScaleDeltaKey(double scale, double delta, TTypeEdit typeEdit, double start = NAN, double stop = NAN, double oldDelta = 0., double oldScale = 1.);
     void Assign(const TPtrData& value);
 
     PROPERTIES_CREATE(TDataBase, TPropertyClass, NO_CREATE(),

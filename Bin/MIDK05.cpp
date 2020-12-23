@@ -17,15 +17,6 @@ VAR_LIST(
     INFO(iiServComp, DosToUtf8(h.Operator))
 ),
 VAR_LIST(
-    SET_INFO(iiArea,    Copy(h.Area, value))
-    SET_INFO(iiWell,    Copy(h.Well, value))
-    SET_INFO(iiDate,    Copy(h.Date, value))
-    SET_INFO(iiTime,    Copy(h.TimeBeg, value))
-    SET_INFO(iiBegin,   Copy(h.DepthBeg, value))
-    SET_INFO(iiEnd,     Copy(h.DepthEnd, value))
-    SET_INFO(iiServComp, Copy(h.Operator, value))
-    ),
-VAR_LIST(
     KEY_LINE(Depth, float);
     ADD(DOUBLE_LINE(GR, API, "", unsigned short))->CLB(float, CoefGRExtA, CoefGRExtB, ucGR)
         ->SetKeyDelta(0.945);

@@ -18,24 +18,14 @@ template<typename TValue, typename TKey, size_t N>
 
 HEADER_BIN(THeaderBinMID4, THeaderBin, TMID4Format,
 VAR_LIST(
-           INFO(iiArea, DosToUtf8(CheckLast0(h.Area)))
-           INFO(iiWell, DosToUtf8(CheckLast0(h.Well)))
-           INFO(iiDate, CheckLast0(h.Date))
-           INFO(iiTime, CheckLast0(h.TimeBeg))
+           INFO(iiArea, DosToUtf8(SafeCharString(h.Area)))
+           INFO(iiWell, DosToUtf8(SafeCharString(h.Well)))
+           INFO(iiDate, SafeCharString(h.Date))
+           INFO(iiTime, SafeCharString(h.TimeBeg))
            INFO(iiBegin, h.DepthBeg)
            INFO(iiEnd, h.DepthEnd)
-           INFO(iiCompany, DosToUtf8(CheckLast0(h.Customer)))
-           INFO(iiServComp, DosToUtf8(CheckLast0(h.Operator)))
-           ),
-VAR_LIST(
-            SET_INFO(iiArea,    Copy(h.Area, value))
-            SET_INFO(iiWell,    Copy(h.Well, value))
-            SET_INFO(iiDate,    Copy(h.Date, value))
-            SET_INFO(iiTime,    Copy(h.TimeBeg, value))
-            SET_INFO(iiBegin,   Copy(h.DepthBeg, value))
-            SET_INFO(iiEnd,     Copy(h.DepthEnd, value))
-            SET_INFO(iiCompany, Copy(h.Customer, value))
-            SET_INFO(iiServComp, Copy(h.Operator, value))
+           INFO(iiCompany, DosToUtf8(SafeCharString(h.Customer)))
+           INFO(iiServComp, DosToUtf8(SafeCharString(h.Operator)))
            ),
 VAR_LIST(
        KEY_LINE(Depth, float);

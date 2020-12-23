@@ -54,11 +54,12 @@ TInspectInfo TMIDFileTemp<THeader, TData>::Inspect(const TString &path, bool isC
         info.SetStatus(false);
     }
     auto& h = header;
-    if(SafeChar(h.EndAscHead) != TString("~ASC"))
+    if(SafeCharString(h.EndAscHead) != TString("~ASC"))
         info.AddWarrning("Field 'EndAscHead' must be '~ASC'.");
 
     if(CheckTextVersionHeader(h) == false)
-        info.AddError(STDFORMAT("Field 'Ver' must be: '%s', error value: '%s'", STR(Version()), STR(SafeChar(h.Ver))));
+        info.AddError(STDFORMAT("Field 'Ver' must be: '%s', error value: '%s'", STR(Version()), STR(
+                SafeCharString(h.Ver))));
 
     CHECK_ARRAY_NULL(Area)
     CHECK_ARRAY_NULL(Well)
