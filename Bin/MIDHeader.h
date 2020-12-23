@@ -13,6 +13,7 @@ public:
     TMIDFileTemp(const TString& v):TBinFileTemp<THeader, TData>(v){}
     TInspectInfo Inspect(const TString &path, bool isCheckFormat) override;
 protected:
+    using TBase = TBinFileTemp<THeader, TData>;
     virtual bool CheckHeader(const THeader& h)
     {
         return TBinFileTemp<THeader, TData>::CheckHeader(h) && h.LenRec == sizeof(TData);
@@ -36,14 +37,14 @@ protected:
 template <typename THeader, typename TData>
 TInspectInfo TMIDFileTemp<THeader, TData>::Inspect(const TString &path, bool isCheckFormat)
 {
-    TInspectInfo info("Inspect for file format: " + Version());
-    auto res = LoadFile(path, isCheckFormat);
+    TInspectInfo info("Inspect for file format: " + TBase::Version());
+    auto res = TBase::LoadFile(path, isCheckFormat);
     if (res.IsError())
     {
         info.AddError(TResult::TextError(res));//ошибка открытия файла
         return info;
     }
-    if(CheckVersion(path).IsNoError())
+    if(TBase::CheckVersion(path).IsNoError())
     {
         info.AddInfo("File can be loaded");
         info.SetStatus(true);
@@ -53,12 +54,12 @@ TInspectInfo TMIDFileTemp<THeader, TData>::Inspect(const TString &path, bool isC
         info.AddInfo("File can not be loaded");
         info.SetStatus(false);
     }
-    auto& h = header;
+    auto& h = TBase::header;
     if(SafeCharString(h.EndAscHead) != TString("~ASC"))
         info.AddWarrning("Field 'EndAscHead' must be '~ASC'.");
 
-    if(CheckTextVersionHeader(h) == false)
-        info.AddError(STDFORMAT("Field 'Ver' must be: '%s', error value: '%s'", STR(Version()), STR(
+    if(TBase::CheckTextVersionHeader(h) == false)
+        info.AddError(STDFORMAT("Field 'Ver' must be: '%s', error value: '%s'", STR(TBase::Version()), STR(
                 SafeCharString(h.Ver))));
 
     CHECK_ARRAY_NULL(Area)
@@ -68,7 +69,7 @@ TInspectInfo TMIDFileTemp<THeader, TData>::Inspect(const TString &path, bool isC
     CHECK_ARRAY_NULL(Operator)
 
     CHECK_EQUAL_INT(LenRec, sizeof(TData), "%d")
-    CHECK_EQUAL_INT(CountOK, CountData(), "%.0f")
+    CHECK_EQUAL_INT(CountOK, TBase::CountData(), "%.0f")
 
     CHECK_VALUE_NULL(CoefIA)
     CHECK_VALUE_NULL(CoefTInA)
