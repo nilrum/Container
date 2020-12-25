@@ -76,7 +76,7 @@ public:
         auto file = OpenFile(path);
         if(file.get() == nullptr) return TBinFileResult::ErrOpen;
         THeader h;
-        std::fread(&h, sizeof(THeader), 1, file.get());
+        auto read = std::fread(&h, sizeof(THeader), 1, file.get());
         return CheckHeader(h) ? TBinFileResult::Ok : TBinFileResult::ErrVersion;
     }
 
@@ -89,7 +89,7 @@ public:
     {
         auto file = OpenFile(path);
         if(file.get() == nullptr) return TBinFileResult::ErrOpen;
-        fread(&header, sizeof(THeader), 1, file.get());
+        auto read = fread(&header, sizeof(THeader), 1, file.get());
         if(isCheck && CheckHeader(header) == false) return TBinFileResult::ErrVersion;
 
         std::fseek(file.get(), 0, SEEK_END);
@@ -98,7 +98,7 @@ public:
 
         std::fseek(file.get(), sizeof(THeader), SEEK_SET);
         for(size_t i = 0; i < data.size(); ++i)
-            std::fread(&data[i], sizeof(TData), 1, file.get());
+            read = std::fread(&data[i], sizeof(TData), 1, file.get());
         return TBinFileResult::Ok;
     }
 
