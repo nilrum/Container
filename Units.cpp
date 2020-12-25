@@ -63,22 +63,31 @@ TString EnumNameFromCategory(TUnitCategory value)
         default: return TString();
     }
 }
+#define PRESTR(VALUE) #VALUE
 
 TString FullUnitDepth(TDepthUnit value)
 {
     if(value == duMeter)
-        return "duMeter";
+        return PRESTR(duMeter);
     else
-        return "duFoot";
+        return PRESTR(duFoot);
 }
 
 TString ShortUnitDepth(TDepthUnit value)
 {
-    if(value == duMeter)
-        return "m";
-    else
-        return "ft";
+    return FullUnitDepth(value) + "_s";
 }
+
+TString FullUnitDepth()
+{
+    return FullUnitDepth(UNIT->Depth());
+}
+
+TString ShortUnitDepth()
+{
+    return ShortUnitDepth(UNIT->Depth());
+}
+
 
 TEnum TUnitProfile::FromCategory(TUnitCategory cat)
 {
@@ -159,3 +168,5 @@ double ConvertUnit(TUnitCategory cat, int from, int to, double value)
         default:            return value;
     }
 }
+
+

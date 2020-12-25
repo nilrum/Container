@@ -299,7 +299,8 @@ TPtrBaseContainer TBaseContainer::ChildContainer(size_t index) const
 const TPtrData &TBaseContainer::AddChildData(const TPtrData &value)
 {
     childData.emplace_back(value);
-    value->SetParent(std::dynamic_pointer_cast<TBaseContainer>(shared_from_this()));
+    if(weak_from_this().expired() == false)
+        value->SetParent(std::dynamic_pointer_cast<TBaseContainer>(shared_from_this()));
     OnChanged();
     return childData.back();
 }

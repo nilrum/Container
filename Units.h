@@ -108,6 +108,9 @@ using TPtrUnits = std::shared_ptr<TUnits>;
 TString FullUnitDepth(TDepthUnit value);
 TString ShortUnitDepth(TDepthUnit value);
 
+TString FullUnitDepth();
+TString ShortUnitDepth();
+
 template<typename  T>
 TString FullUnit(T value)
 {

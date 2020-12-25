@@ -86,10 +86,10 @@ void THeaderLas::AddWellInfo(const TVecString &info)
     if(index == iiBegin)//получаем ед измерения глубины
     {
         TString unit = ToLowerCase(info[1]);
-        if(unit == ShortUnitDepth(duMeter))
+        if(unit == "m")
             depthUnit = duMeter;
         else
-            if(unit == ShortUnitDepth(duFoot))
+            if(unit == "ft")
                 depthUnit = duFoot;
             else
                 depthUnit = duNone;
