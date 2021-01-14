@@ -59,7 +59,7 @@ TPtrHeader TContainer::HeaderFromFile(const TString& path)
 
 TResult TContainer::HeaderFromFile(const TString &path, TPtrHeader &hdr)
 {
-    TResult res;
+    TResult res(TContainerResult::InvHeader);
     for(const TPtrRegHeader& h : Headers())
     {
         res = h->CheckFile(path);

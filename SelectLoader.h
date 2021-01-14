@@ -31,6 +31,9 @@ public:
     void SetIsSelected(bool value);
 
     bool IsStepChanged() const;
+
+    using TCreateView = std::function<std::shared_ptr<TSelectLoader>()>;
+    STATIC_ARG(TCreateView, CreateFunc, [](){ return std::make_shared<TSelectLoader>();})
 protected:
     TPtrContainer cont;
     TVecData loadable;
